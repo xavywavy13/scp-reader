@@ -158,11 +158,11 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .tips code{font:500 13px var(--f-mono);background:var(--raise);border:1px solid var(--line);padding:1px 6px;border-radius:6px;color:var(--ink)}
 
 /* sheets + overlays */
-.overlay{position:fixed;top:0;left:0;right:0;bottom:auto;height:100vh;height:100lvh;z-index:40;background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:auto;height:calc(100vh + env(safe-area-inset-top,0px));height:calc(100lvh + env(safe-area-inset-top,0px));z-index:40;background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .overlay.open{transform:none}
 .ohead{display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 6px) max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--bg)}
 .ohead h3{flex:1;min-width:0;margin:0;font:700 20px/1.1 var(--f-display);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.obody{flex:1;overflow-y:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px calc(env(safe-area-inset-bottom,0px) + 32px)}
+.obody{flex:1;overflow-y:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px calc(env(safe-area-inset-bottom,0px) + env(safe-area-inset-top,0px) + 32px)}
 .scrim{position:fixed;inset:0;z-index:60;background:rgb(0 0 0 / .35);opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--surface);border-radius:20px 20px 0 0;padding:10px max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(18px,env(safe-area-inset-left,0px));transform:translateY(105%);transition:transform .26s cubic-bezier(.2,.8,.2,1);max-height:82%;overflow-y:auto;max-width:640px;margin:0 auto}
@@ -197,7 +197,7 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .rbar .ttl{flex:1;min-width:0;font:600 17px/1 var(--f-display);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s;text-align:center}
 .reader.scrolled .rbar .ttl{opacity:1}
 .prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--r-accent);width:0}
-.rscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-left:max(var(--r-gutter,20px),env(safe-area-inset-left,0px));padding-right:max(var(--r-gutter,20px),env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 70px) calc(env(safe-area-inset-bottom,0px) + 40px)}
+.rscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-left:max(var(--r-gutter,20px),env(safe-area-inset-left,0px));padding-right:max(var(--r-gutter,20px),env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 70px) calc(env(safe-area-inset-bottom,0px) + env(safe-area-inset-top,0px) + 40px)}
 .rwrap{max-width:var(--r-measure,38em);margin:0 auto;font-family:var(--r-font,var(--f-read));font-size:var(--r-size,19px);line-height:var(--r-lh,1.62)}
 .rhead{margin-bottom:1.6em;padding-bottom:1.2em;border-bottom:1px solid var(--r-line);font-family:var(--f-ui)}
 .rhead .eyebrow{font:500 12px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--r-muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -538,7 +538,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections &amp; canons<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)}</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 3</p>`;
 }
 function randomFrom(kind){
   let pool;

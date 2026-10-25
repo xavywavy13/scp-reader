@@ -1,5 +1,5 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v1";
+const SHELL = "shell-v3";
 const DATA = "data-v1";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./apple-touch-icon.png"];
@@ -28,7 +28,7 @@ self.addEventListener("fetch", e => {
   }
   // App shell: network first so updates arrive, cache when offline.
   if (url.origin === location.origin) {
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req, {cache: "no-store"}).then(res => {
       if (res.ok) caches.open(SHELL).then(c => c.put(req, res.clone()));
       return res;
     }).catch(() => caches.match(req).then(r => r || caches.match("./index.html"))));
