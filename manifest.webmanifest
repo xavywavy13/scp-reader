@@ -1,0 +1,15 @@
+{
+  "name": "SCP Field Reader",
+  "short_name": "SCP Reader",
+  "description": "A clean, phone-first reader for the SCP Wiki.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#15181c",
+  "theme_color": "#15181c",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
