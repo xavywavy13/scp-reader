@@ -1,5 +1,5 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v5";
+const SHELL = "shell-v6";
 const DATA = "data-v1";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./apple-touch-icon.png"];
