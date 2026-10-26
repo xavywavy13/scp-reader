@@ -9,6 +9,7 @@ on:
     paths:
       - scripts/add_001.py
       - scripts/scp_clean.py
+      - scripts/build_data.py
       - .github/workflows/add-001.yml
 
 permissions:
@@ -33,7 +34,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/index.gz data/c/226.gz
+          git add data/index.gz data/c/900.gz
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Add SCP-001 proposals from the wiki"
           git push

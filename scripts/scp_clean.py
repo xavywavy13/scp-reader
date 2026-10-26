@@ -78,15 +78,86 @@ def remove(el):
             p.text = (p.text or "") + el.tail
     p.remove(el)
 
-def clean(html):
+HTML_BLOCK_RE = re.compile(r"\[\[html[^\]]*\]\](.*?)\[\[/html\]\]", re.S | re.I)
+IFRAME_RE = re.compile(r"<iframe[^>]*html-block-iframe[^>]*>\s*</iframe>", re.I)
+WIKI = "https://scp-wiki.wikidot.com"
+
+
+def inline_html_blocks(html, source):
+    """Some articles put their text inside an [[html]] block, which the wiki shows in an
+    iframe. The crawl only kept the empty iframe, so put the block's HTML back in its place,
+    taken from the page source (blocks and iframes appear in the same order)."""
+    if not source or "html-block-iframe" not in html:
+        return html
+    blocks = HTML_BLOCK_RE.findall(source)
+    if not blocks:
+        return html
+    it = iter(blocks)
+
+    def sub(_m):
+        b = next(it, None)
+        if b is None:
+            return ""
+        b = re.sub(r"<!doctype[^>]*>|</?html[^>]*>|<head[^>]*>.*?</head>|</?body[^>]*>", "", b, flags=re.S | re.I)
+        b = re.sub(r'<a href="([^"]*)">\1</a>', r"\1", b)  # undo the crawler's auto-linking of bare URLs
+        return f'<div class="htmlblock">{b}</div>'
+    return IFRAME_RE.sub(sub, html)
+
+
+def looks_like_code(txt):
+    """Hidden blocks that hold page CSS, theme code or template variables, not story text."""
+    return ("{$" in txt or "@import" in txt or "var(--" in txt
+            or txt.count("{") >= 3 or txt.count(";") > len(txt.split()) / 4)
+
+
+def decrypt_classified(root, source):
+    """SCP-3125 (and translations using its keypad component) ship the article body
+    encrypted and decrypt it in the browser once you enter the code. Do that here so the
+    file can be read."""
+    els = root.xpath('.//*[contains(concat(" ",normalize-space(@class)," ")," classified-info ")]')
+    m = re.search(r'"abcdefghijklmnopqrstuvwxyz"\s*,\s*\w+\s*=\s*"([a-z]+)"', source or "")
+    if not els or not m:
+        return
+    key, abc = m.group(1), "abcdefghijklmnopqrstuvwxyz"
+    from urllib.parse import unquote
+
+    def dec(text):
+        out = []
+        for i, ch in enumerate(text):
+            k = abc.index(key[i % len(key)])
+            low = ch.lower()
+            if low in abc:
+                d = abc[(abc.index(low) + 26 - k) % 26]
+                out.append(d.upper() if ch != low else d)
+            else:
+                out.append(ch)
+        try:
+            return unquote("".join(out), errors="strict")
+        except Exception:
+            return "".join(out)
+    for el in els:
+        for node in el.iter():
+            if not isinstance(node.tag, str):
+                continue
+            if node.text:
+                node.text = dec(node.text)
+            if node is not el and node.tail:
+                node.tail = dec(node.tail)
+        st = el.get("style") or ""
+        el.set("style", re.sub(r"display\s*:\s*none\s*;?", "", st, flags=re.I))
+
+
+def clean(html, source=None):
     if not html:
         return ""
+    html = inline_html_blocks(html, source)
     try:
         doc = lxml.html.fromstring(html)
     except Exception:
         return ""
     pc = doc.get_element_by_id("page-content", None)
     root = pc if pc is not None else doc
+    decrypt_classified(root, source)
     for bad in root.xpath(".//script|.//style|.//iframe|.//object|.//embed|.//form|.//noscript|.//link|.//meta|.//input|.//button|.//select|.//textarea|.//audio|.//video"):
         remove(bad)
     # ACS bars
@@ -139,16 +210,39 @@ def clean(html):
         ts.tail = el.tail
         if el.getparent() is not None:
             el.getparent().replace(el, ts)
-    # elements hidden by inline style (template leftovers, unfolded duplicates)
+    # elements hidden by inline style. Inside an embedded HTML block they are usually
+    # content revealed by a script (which the app can't run), so show them. Elsewhere,
+    # small ones are template leftovers or duplicates and go; real hidden text becomes
+    # a tap-to-reveal section rather than being lost.
     for el in list(root.iter()):
         if not isinstance(el.tag, str) or el.getparent() is None:
             continue
+        in_block = bool(el.xpath('ancestor::div[@class="htmlblock"]'))
+        if in_block and el.get("hidden") is not None:
+            del el.attrib["hidden"]
         st = (el.get("style") or "").replace(" ", "").lower()
-        if "display:none" in st:
+        if "display:none" not in st:
+            continue
+        txt = el.text_content()
+        if in_block:
+            el.set("style", re.sub(r"display\s*:\s*none\s*;?", "", el.get("style"), flags=re.I))
+        elif len(txt.split()) >= 25 and not looks_like_code(txt):
+            det = etree.Element("details")
+            summ = etree.SubElement(det, "summary"); summ.text = "Hidden section"
+            body = etree.SubElement(det, "div", {"class": "det-body"})
+            del el.attrib["style"]
+            det.tail = el.tail; el.tail = None
+            el.getparent().replace(el, det)
+            body.append(el)
+        else:
             remove(el)
     # images -> tappable placeholders (external images can't load in the app)
     for img in root.xpath(".//img"):
         src = img.get("src") or ""
+        if src.startswith("//"):
+            src = "https:" + src
+        elif src.startswith("/"):
+            src = WIKI + src
         if not src.startswith("http"):
             remove(img); continue
         alt = (img.get("alt") or "").strip()

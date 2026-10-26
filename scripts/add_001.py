@@ -4,7 +4,7 @@ The archive the app was built from leaves most 001 proposals out (they aren't
 tagged as normal SCPs), so this script reads the wiki's "001-proposal" tag list,
 downloads each proposal page, cleans it, and writes:
 
-  data/c/226.gz   one chunk holding every proposal's article text
+  data/c/900.gz   one chunk holding every proposal's article text
   data/index.gz   the article list, updated so the proposals appear under
                   "001 Proposals" in the app
 
@@ -26,7 +26,7 @@ from scp_clean import clean  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "data" / "index.gz"
-CHUNK_NO = 226
+CHUNK_NO = 900
 CHUNK = ROOT / "data" / "c" / f"{CHUNK_NO:03d}.gz"
 WIKI = "https://scp-wiki.wikidot.com"
 TAG_PAGE = f"{WIKI}/system:page-tags/tag/001-proposal"

@@ -541,7 +541,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections &amp; canons<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 8</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 9</p>`;
 }
 function randomFrom(kind){
   let pool;
