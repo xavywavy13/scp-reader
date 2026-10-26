@@ -54,7 +54,7 @@
 img{max-width:100%}
 
 html,body{height:100%}
-html{overflow:hidden}
+html.not-ios{overflow:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-ui);-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
@@ -325,6 +325,8 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 <script>
 (() => {
 "use strict";
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (!IS_IOS) document.documentElement.classList.add("not-ios");
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = n => n.toLocaleString("en-AU");
@@ -539,7 +541,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections &amp; canons<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 6</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 7</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -605,7 +607,10 @@ function renderBrowse(soft){
   $("#tagBtn").onclick = openTags;
   const ct = $("#clearTag"); if (ct) ct.onclick = () => { B.tag = null; render(); };
   const ac = viewEl.querySelector('.chip[aria-pressed="true"][data-s]');
-  if (ac && B.series) { const row = ac.parentElement; row.scrollLeft = ac.offsetLeft - (row.clientWidth - ac.offsetWidth) / 2; }
+  if (ac && B.series) {
+    if (IS_IOS) ac.scrollIntoView({inline:"center", block:"nearest"});
+    else { const row = ac.parentElement; row.scrollLeft = ac.offsetLeft - (row.clientWidth - ac.offsetWidth) / 2; }
+  }
   if (soft) mainEl.scrollTop = keepTop;
 }
 function openTags(){
@@ -939,9 +944,9 @@ $("#lb").addEventListener("click", e => { if (e.target.id === "lb" || e.target.c
    status-bar height; measure the real screen and stretch the layout to it. */
 let vgap = 0;
 function fitScreen(){
-  // Only iPhone/iPad home-screen apps have this bug (navigator.standalone exists only on iOS).
-  // Android reports its own status and navigation bars in screen.height, so it must not be stretched.
-  const st = navigator.standalone === true;
+  // Only iPhone/iPad home-screen apps have this bug. Android reports its own status and
+  // navigation bars in screen.height, so it must not be stretched.
+  const st = IS_IOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches);
   const portrait = innerHeight >= innerWidth;
   const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
   const gap = full - innerHeight;
@@ -951,8 +956,8 @@ function fitScreen(){
   rs.setProperty("--full", (innerHeight + vgap) + "px");
 }
 addEventListener("resize", fitScreen);
-// the page itself never scrolls; only the panels inside it do
-addEventListener("scroll", () => { if (scrollY || scrollX) scrollTo(0, 0); }, {passive:true}); addEventListener("orientationchange", () => setTimeout(fitScreen, 300));
+// Android: the page itself never scrolls; only the panels inside it do
+if (!IS_IOS) addEventListener("scroll", () => { if (scrollY || scrollX) scrollTo(0, 0); }, {passive:true}); addEventListener("orientationchange", () => setTimeout(fitScreen, 300));
 fitScreen();
 applyReaderSettings();
 boot();
