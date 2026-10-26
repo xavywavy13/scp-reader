@@ -423,8 +423,8 @@ async function initSync(){
 
 /* ---------------- data ---------------- */
 let IDX = null, ALL = [], BY = new Map(), POS = new Map();
-async function fetchGz(url){
-  const r = await fetch(url);
+async function fetchGz(url, opts){
+  const r = await fetch(url, opts);
   if (!r.ok) throw new Error("HTTP " + r.status);
   const buf = new Uint8Array(await r.arrayBuffer());
   let text;
@@ -435,9 +435,13 @@ async function fetchGz(url){
   return JSON.parse(text);
 }
 const chunkCache = new Map();
-function getChunk(n){
+// Chunk URLs carry the archive version, so a saved copy from an older archive is never
+// matched up with a newer article list.
+const chunkUrl = n => `data/c/${String(n).padStart(3,"0")}.gz?v=${encodeURIComponent(IDX.dv || IDX.built || "1")}`;
+function getChunk(n, fresh){
+  if (fresh) chunkCache.delete(n);
   if (!chunkCache.has(n)) {
-    const p = fetchGz(`data/c/${String(n).padStart(3,"0")}.gz`).catch(e => { chunkCache.delete(n); throw e; });
+    const p = fetchGz(chunkUrl(n) + (fresh ? "&fresh=" + Date.now() : ""), fresh ? {cache: "reload"} : undefined).catch(e => { chunkCache.delete(n); throw e; });
     chunkCache.set(n, p);
     if (chunkCache.size > 8) chunkCache.delete(chunkCache.keys().next().value);
   }
@@ -541,7 +545,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections &amp; canons<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 9</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 10</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -795,7 +799,8 @@ async function openArticle(id, opts = {}){
   state.hist = [[id, today()], ...state.hist.filter(([i]) => i !== id)];
   trimProg(); save("prog");
   try {
-    const ch = await getChunk(m.ch);
+    let ch = await getChunk(m.ch);
+    if (!(m.id in ch)) ch = await getChunk(m.ch, true);  // stale saved copy: fetch it again
     if (cur !== m) return;
     const html = ch[m.id] || "<p>This file is empty.</p>";
     RW.innerHTML = headerHTML(m) + `<article class="rbody">${html}</article>` + endHTML(m);

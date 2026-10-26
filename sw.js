@@ -1,6 +1,6 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v9";
-const DATA = "data-v2";      // bump when the article archive is rebuilt
+const SHELL = "shell-v10";
+const DATA = "data-v3";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./apple-touch-icon.png"];
 
@@ -30,7 +30,7 @@ self.addEventListener("fetch", e => {
       const hit = await c.match(req);
       if (hit) return hit;
       const res = await fetch(req);
-      if (res.ok) c.put(req, res.clone());
+      if (res.ok) c.put(url.searchParams.has("fresh") ? req.url.replace(/&fresh=\d+/, "") : req, res.clone());
       return res;
     }));
     return;
