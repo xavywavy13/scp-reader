@@ -1,0 +1,39 @@
+name: Add SCP-001 proposals
+
+# Runs when this workflow or its script changes, and can be started by hand
+# from the Actions tab ("Run workflow").
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/add_001.py
+      - scripts/scp_clean.py
+      - .github/workflows/add-001.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: add-001
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests lxml cssselect
+      - run: python scripts/add_001.py
+      - name: Commit the updated archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/index.gz data/c/226.gz
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Add SCP-001 proposals from the wiki"
+          git push
