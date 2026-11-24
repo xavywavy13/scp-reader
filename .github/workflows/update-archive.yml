@@ -1,0 +1,60 @@
+name: Update archive
+
+# Every Monday: pull the latest SCP Wiki data, add new articles, refresh ratings and
+# details, pick up rewrites, then refresh the 001 proposals, canons and "Mentioned in".
+# Run it by hand from the Actions tab; tick "full" to rebuild every chunk from scratch.
+on:
+  schedule:
+    - cron: "17 16 * * 0"   # Monday 03:17 in Melbourne (summer time)
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Rebuild every chunk (bigger download for everyone; use rarely)"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - scripts/update_archive.py
+      - scripts/build_links.py
+      - .github/workflows/update-archive.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests lxml cssselect
+      - name: Get the latest SCP data
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/scp-data/scp-api.git /tmp/scp-api
+          cd /tmp/scp-api
+          git sparse-checkout set --no-cone '/docs/data/scp/items/*' '/docs/data/scp/tales/*' '/docs/data/scp/hubs/*' '/docs/data/scp/goi/*'
+      - name: Update articles
+        run: python scripts/update_archive.py /tmp/scp-api/docs/data/scp ${{ inputs.full && '--full' || '' }}
+      - name: Refresh 001 proposals
+        run: python scripts/add_001.py || echo "Proposals not refreshed this time"
+      - name: Refresh canons
+        run: python scripts/build_canons.py || echo "Canons not refreshed this time"
+      - name: Build "Mentioned in"
+        run: python scripts/build_links.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Weekly archive update"
+          git pull --rebase origin main
+          git push

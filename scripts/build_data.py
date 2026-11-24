@@ -128,7 +128,7 @@ total_gz = 0
 def flush():
     global chunk, size, ci, total_gz
     if not chunk: return
-    data = gzip.compress(json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(), 9)
+    data = gzip.compress(json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0)
     open(f"{OUT}/c/{ci:03d}.gz", "wb").write(data)
     total_gz += len(data)
     chunk, size, ci = {}, 0, ci + 1
@@ -160,6 +160,6 @@ index = {"v": 1, "built": "", "tags": taglist, "tagCount": [tagc[t] for t in tag
 import datetime
 index["built"] = datetime.date.today().isoformat()
 raw = json.dumps(index, ensure_ascii=False, separators=(",", ":")).encode()
-open(f"{OUT}/index.json.gz", "wb").write(gzip.compress(raw, 9))
+open(f"{OUT}/index.json.gz", "wb").write(gzip.compress(raw, 9, mtime=0))
 print("articles", len(metas), "chunks", ci, "chunk gz MB", round(total_gz / 1e6, 1),
       "index raw MB", round(len(raw) / 1e6, 2), "nicknames", sum(1 for m in metas if m.get("n")))

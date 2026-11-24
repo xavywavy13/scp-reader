@@ -328,7 +328,7 @@ def main():
         print(f"[{n}/{len(canons)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
 
     data = {"v": 1, "built": time.strftime("%Y-%m-%d"), "c": out}
-    OUT.write_bytes(gzip.compress(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode(), 9))
+    OUT.write_bytes(gzip.compress(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0))
     print(f"Wrote {len(out)} canons to {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
 
 

@@ -188,8 +188,10 @@ def main():
         h["m"] = [i for i in h["m"] if i in {m["id"] for m in index["a"]}]
     index["proposalsUpdated"] = time.strftime("%Y-%m-%d")
 
-    CHUNK.write_bytes(gzip.compress(json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(), 9))
-    INDEX.write_bytes(gzip.compress(json.dumps(index, ensure_ascii=False, separators=(",", ":")).encode(), 9))
+    CHUNK.write_bytes(gzip.compress(json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0))
+    import hashlib
+    index.setdefault("cv", {})[str(CHUNK_NO)] = hashlib.sha1(CHUNK.read_bytes()).hexdigest()[:10]
+    INDEX.write_bytes(gzip.compress(json.dumps(index, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0))
     print(f"Added {len(entries)} proposals ({CHUNK.stat().st_size // 1024} KB).")
 
 

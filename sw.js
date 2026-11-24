@@ -1,5 +1,5 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v11";
+const SHELL = "shell-v12";
 const DATA = "data-v3";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./apple-touch-icon.png"];
@@ -18,11 +18,11 @@ self.addEventListener("fetch", e => {
   // Article archive: cache first, it never changes within a data version.
   // The article list, canon list and 001-proposal chunk can be refreshed by GitHub Actions,
   // so check the network for those first and fall back to the saved copy offline.
-  if (url.origin === location.origin && /\/data\/(index\.gz|canons\.gz|c\/900\.gz)$/.test(url.pathname)) {
+  if (url.origin === location.origin && /\/data\/(index\.gz|canons\.gz|links\.gz|c\/900\.gz)$/.test(url.pathname)) {
     e.respondWith(fetch(req, {cache: "no-cache"}).then(res => {
-      if (res.ok) caches.open(DATA).then(c => c.put(req, res.clone()));
+      if (res.ok) { const copy = res.clone(); caches.open(DATA).then(c => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req)));
+    }).catch(() => caches.match(req, {ignoreSearch: true})));
     return;
   }
   if (url.origin === location.origin && url.pathname.includes("/data/")) {
@@ -30,7 +30,15 @@ self.addEventListener("fetch", e => {
       const hit = await c.match(req);
       if (hit) return hit;
       const res = await fetch(req);
-      if (res.ok) c.put(url.searchParams.has("fresh") ? req.url.replace(/&fresh=\d+/, "") : req, res.clone());
+      if (res.ok) {
+        const key = url.searchParams.has("fresh") ? req.url.replace(/&fresh=\d+/, "") : req.url;
+        await c.put(key, res.clone());
+        // drop older versions of the same chunk so the offline store doesn't grow
+        for (const k of await c.keys()) {
+          const ku = new URL(k.url);
+          if (ku.pathname === url.pathname && k.url !== key) c.delete(k);
+        }
+      }
       return res;
     }));
     return;

@@ -213,6 +213,20 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .stepper button{width:44px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--raise);font-weight:700}
 .stepper output{flex:1;text-align:center;font:500 14px var(--f-mono)}
 .fn-text{font:400 17px/1.55 var(--f-read)}
+/* link preview */
+.pv{display:grid;gap:6px}
+.pv .k{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pv .t{font:700 34px/1 var(--f-display);text-transform:uppercase;overflow-wrap:anywhere}
+.pv .n{font:italic 400 18px/1.3 var(--f-read)}
+.pv .m{display:flex;gap:12px;flex-wrap:wrap;font:400 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.pv .m .done{display:inline-flex;align-items:center;gap:4px}
+.pv .sn{font:400 16px/1.55 var(--f-read);color:var(--ink);margin:8px 0 0;min-height:3.1em}
+.pv .sn.wait{color:var(--faint)}
+.pv .confirm{margin-top:12px}
+/* backup */
+.note{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
+.note b{color:var(--ink)}
+label.btn{cursor:pointer}
 .confirm{display:flex;gap:10px;margin-top:16px}
 .btn{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--raise);font-weight:700;text-align:center}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -310,6 +324,14 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .nav2 small{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-muted)}
 .nav2 b{font:700 18px/1.1 var(--f-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav2 span{font:400 13px/1.3 var(--f-read);color:var(--r-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ment{display:grid;gap:4px}
+.ment h3{margin:0 0 4px;font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted);display:flex;justify-content:space-between;gap:12px}
+.ment .ml{display:flex;flex-direction:column;border-top:1px solid var(--r-line)}
+.ment .ml button{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline;text-align:left;padding:10px 2px;border-bottom:1px solid var(--r-line);min-width:0}
+.ment .ml b{font:700 17px/1.1 var(--f-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ment .ml i{font:400 12px var(--f-mono);font-style:normal;color:var(--r-muted)}
+.ment .ml span{grid-column:1/-1;font:400 14px/1.3 var(--f-read);color:var(--r-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ment .all{justify-self:start;color:var(--r-accent);font:700 14px var(--f-ui);padding:6px 0}
 .ccanon{border:1px solid var(--r-line);border-radius:14px;padding:14px;display:grid;gap:8px;background:var(--r-soft)}
 .ccanon .k{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted)}
 .ccanon .cn{font:700 26px/1 var(--f-display);text-transform:uppercase;text-align:left;color:var(--r-ink)}
@@ -403,7 +425,7 @@ const LS = {
   get(k, d){ try { const v = localStorage.getItem("scpr:"+k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v){ try { localStorage.setItem("scpr:"+k, JSON.stringify(v)); } catch {} },
 };
-const DEF_SET = {rt:"auto", font:"serif", size:19, lh:1.62, width:"normal", just:0, hideRead:0};
+const DEF_SET = {rt:"auto", font:"serif", size:19, lh:1.62, width:"normal", just:0, hideRead:0, links:"preview"};
 const state = {
   lib: Object.assign({bm:{}, read:{}}, LS.get("lib", {})),
   prog: LS.get("prog", {}),         // id -> [fraction, ts]
@@ -490,7 +512,7 @@ async function fetchGz(url, opts){
 const chunkCache = new Map();
 // Chunk URLs carry the archive version, so a saved copy from an older archive is never
 // matched up with a newer article list.
-const chunkUrl = n => `data/c/${String(n).padStart(3,"0")}.gz?v=${encodeURIComponent(IDX.dv || IDX.built || "1")}`;
+const chunkUrl = n => `data/c/${String(n).padStart(3,"0")}.gz?v=${encodeURIComponent((IDX.cv && IDX.cv[n]) || IDX.dv || IDX.built || "1")}`;
 function getChunk(n, fresh){
   if (fresh) chunkCache.delete(n);
   if (!chunkCache.has(n)) {
@@ -601,7 +623,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 11</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 12</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -771,15 +793,81 @@ function renderLibrary(){
     read: "Files get marked as finished when you reach the end, or when you tap Mark as read.",
   };
   viewEl.innerHTML = `
-    <header class="top"><h1 class="wordmark"><small>Personal file</small>Library</h1>${libSeg==="hist"&&seg.hist[1].length?`<button class="chip" id="clrH">Clear</button>`:""}</header>
+    <header class="top"><h1 class="wordmark"><small>Personal file</small>Library</h1><div style="display:flex;gap:8px">${libSeg==="hist"&&seg.hist[1].length?`<button class="chip" id="clrH">Clear</button>`:""}<button class="chip" id="bkBtn">Backup</button></div></header>
     <div class="seg" role="group" aria-label="Library">${Object.entries(seg).map(([k,[l,a]]) => `<button data-l="${k}" aria-pressed="${libSeg===k}">${l}</button>`).join("")}</div>
     <div class="count">${fmt(seg[libSeg][1].length)} files</div>
     <div id="llist"></div>`;
   lazyList($("#llist"), seg[libSeg][1], `<div class="empty"><b>Nothing here yet</b>${empty[libSeg]}</div>`);
   viewEl.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { libSeg = b.dataset.l; render(); });
+  $("#bkBtn").onclick = openBackup;
   const c = $("#clrH"); if (c) c.onclick = () => openSheet(`<h4>Clear reading history?</h4><p style="margin:0;color:var(--muted)">Your saved files, places and finished marks stay. Only the list of opened files is removed.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doClr">Clear history</button></div>`, () => {
     $("#doClr").onclick = () => { state.hist = []; save("prog"); closeSheet(); render(); toast("History cleared"); };
   });
+}
+
+/* ---------------- backup & restore ---------------- */
+function backupData(){
+  return {app: "scp-field-reader", v: 1, exported: new Date().toISOString(),
+          lib: state.lib, prog: state.prog, hist: state.hist, set: state.set};
+}
+function openBackup(){
+  const last = LS.get("lastBackup", null);
+  const nb = Object.keys(state.lib.bm).length, nr = Object.keys(state.lib.read).length, np = Object.keys(state.prog).length;
+  openSheet(`<h4>Back up your library</h4>
+    <p class="note">Saves your <b>${fmt(nb)}</b> saved files, <b>${fmt(nr)}</b> finished files, <b>${fmt(np)}</b> reading places, history and reading settings to a small file. Keep it in Files, iCloud Drive or Google Drive, or send it to your other phone.</p>
+    <p class="note" style="margin-top:6px">${last ? `Last backup: ${new Date(last).toLocaleDateString("en-AU", {day: "numeric", month: "short", year: "numeric"})}` : "You haven't made a backup on this phone yet."}</p>
+    <div class="confirm"><button class="btn pri" id="bkExport">Export backup</button></div>
+    <h4>Restore from a backup</h4>
+    <p class="note">Choose a backup file. It's merged with what's already on this phone, so nothing here is lost.</p>
+    <div class="confirm"><label class="btn" for="bkFile">Choose backup file</label></div>
+    <input type="file" id="bkFile" accept=".json,application/json,text/plain" hidden>
+    <p class="note" id="bkMsg" role="status" style="margin-top:10px"></p>`, () => {
+    $("#bkExport").onclick = exportBackup;
+    $("#bkFile").onchange = e => { const f = e.target.files && e.target.files[0]; if (f) importBackup(f); e.target.value = ""; };
+  });
+}
+async function exportBackup(){
+  const name = `scp-reader-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const blob = new Blob([JSON.stringify(backupData())], {type: "application/json"});
+  const done = () => { LS.set("lastBackup", Date.now()); const m = $("#bkMsg"); if (m) m.textContent = "Backup exported."; };
+  try {
+    const file = new File([blob], name, {type: "application/json"});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: "SCP Field Reader backup"});
+      return done();
+    }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  done();
+}
+async function importBackup(file){
+  const msg = $("#bkMsg");
+  let d;
+  try { d = JSON.parse(await file.text()); } catch { msg.textContent = "That file isn't a backup from this app. Choose a file ending in .json that you exported here."; return; }
+  if (!d || d.app !== "scp-field-reader" || !d.lib) { msg.textContent = "That file isn't a backup from this app. Choose a file you exported with Export backup."; return; }
+  const add = {bm: 0, read: 0, prog: 0};
+  const lib = {bm: {...state.lib.bm}, read: {...state.lib.read}};
+  for (const k of ["bm", "read"]) for (const [id, ts] of Object.entries(d.lib[k] || {})) {
+    if (!(id in lib[k])) add[k]++;
+    if (!(id in lib[k]) || lib[k][id] < ts) lib[k][id] = ts;
+  }
+  state.lib = {...state.lib, ...lib};
+  for (const [id, v] of Object.entries(d.prog || {})) {
+    if (!Array.isArray(v)) continue;
+    if (!state.prog[id]) add.prog++;
+    if (!state.prog[id] || state.prog[id][1] < v[1]) state.prog[id] = v;
+  }
+  const seen = new Set();
+  state.hist = [...(d.hist || []), ...state.hist].filter(x => Array.isArray(x)).sort((a, b) => b[1] - a[1]).filter(([i]) => !seen.has(i) && seen.add(i));
+  trimProg();
+  if (d.set && !LS.get("set", null)) { state.set = Object.assign({}, DEF_SET, d.set); save("set"); applyReaderSettings(); }
+  save("lib"); save("prog");
+  msg.textContent = `Restored: ${fmt(add.bm)} saved files, ${fmt(add.read)} finished files and ${fmt(add.prog)} reading places added.`;
+  toast("Backup restored");
+  refresh();
 }
 
 /* ---------------- list overlay (hubs, authors, tags) ---------------- */
@@ -801,6 +889,22 @@ function openHubs(){
   $("#listO").classList.add("open");
 }
 document.querySelector('[data-close="listO"]').onclick = () => $("#listO").classList.remove("open");
+
+/* ---------------- mentioned in ---------------- */
+let BACK = null;
+async function loadLinks(){
+  try { const d = await fetchGz("data/links.gz"); BACK = d.b || {}; } catch (e) { BACK = null; }
+  if (cur && R.classList.contains("open")) { const el = RW.querySelector(".ment-slot"); if (el) el.outerHTML = mentionedHTML(cur); }
+}
+function mentionedHTML(m){
+  const ids = BACK && BACK[m.id] ? BACK[m.id].filter(id => BY.has(id)) : [];
+  if (!BACK) return `<div class="ment-slot"></div>`;
+  if (!ids.length) return "";
+  const show = ids.slice(0, 5);
+  return `<section class="ment"><h3><span>Mentioned in</span><span>${ids.length === 150 ? "150+" : fmt(ids.length)} files</span></h3>
+    <div class="ml">${show.map(id => { const x = BY.get(id); return `<button data-id="${esc(id)}"><b>${esc(x.t)}</b><i>+${fmt(x.r)}</i><span>${esc(x.k === "scp" ? (x.n || "—") : (x.a ? "by " + x.a : "Tale"))}</span></button>`; }).join("")}</div>
+    ${ids.length > show.length ? `<button class="all" data-mentions="${esc(m.id)}">See all ${fmt(ids.length)}</button>` : ""}</section>`;
+}
 
 /* ---------------- canons ---------------- */
 let CANONS = [], CANON_BY = new Map(), CANON_OF = new Map(), canonsState = "loading";
@@ -976,6 +1080,7 @@ function endHTML(m){
   return `<footer class="rend">
     <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
     ${canonEndHTML(m)}
+    ${mentionedHTML(m)}
     ${p||n?`<div class="nav2">${cell(p,"‹ Previous")}${cell(n,"Next ›")}</div>`:""}
     <p class="lic">“${esc(m.k==="scp"?(m.n?m.t+" – "+m.n:m.t):m.t)}” by ${esc(m.a||"its authors")}, from the <a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">SCP Wiki</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Images load from the SCP Wiki.</p>
   </footer>`;
@@ -1087,17 +1192,58 @@ RW.addEventListener("click", e => {
   }
   if (a.dataset.w !== undefined && a.tagName === "A") {
     const slug = a.dataset.w;
-    if (BY.has(slug)) { e.preventDefault(); openArticle(slug); }
+    if (BY.has(slug)) { e.preventDefault(); if (state.set.links === "open") openArticle(slug); else previewLink(slug); }
     else if (slug.startsWith("footnote")) e.preventDefault();
     return;
   }
   if (a.getAttribute("href") === "#") { e.preventDefault(); return; }
   if (a.dataset.canon) return openCanon(a.dataset.canon, true);
+  if (a.dataset.mentions) { const t = BY.get(a.dataset.mentions); return openList("Mentioned in " + t.t, (BACK[t.id] || []).map(i => BY.get(i)).filter(Boolean), true); }
   if (a.dataset.id) return openArticle(a.dataset.id, {canon: a.dataset.cctx || null});
   if (a.dataset.author) { const au = a.dataset.author; return openList("By " + au, ALL.filter(m => m.a === au).sort((x,y)=>y.r-x.r), true); }
   if (a.dataset.tag) { const ti = +a.dataset.tag; return openList("#" + IDX.tags[ti], ALL.filter(m => m.g.includes(ti)).sort((x,y)=>y.r-x.r), true); }
   if (a.id === "mRead") return setRead(cur.id, !isRead(cur.id));
 });
+
+/* link preview: tap an SCP link to see what it is before leaving the page */
+let pvId = null;
+function summaryOf(html){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const ps = [...doc.querySelectorAll("p")].map(p => p.textContent.replace(/\s+/g, " ").trim()).filter(Boolean);
+  let t = ps.find(x => /^description\s*:/i.test(x));
+  if (t) t = t.replace(/^description\s*:\s*/i, "");
+  else t = ps.find(x => x.length > 80 && !/^(item\s*#|object class|special containment|containment class|by\s)/i.test(x)) || ps[0] || "";
+  return t.length > 230 ? t.slice(0, 230).replace(/\s+\S*$/, "") + "…" : t;
+}
+function previewLink(id){
+  const m = BY.get(id); if (!m) return;
+  pvId = id;
+  const kind = m.k === "scp" ? seriesLabel(seriesKey(m.s)) : (m.k === "goi" ? "Group of Interest" : "Tale");
+  const p = progOf(id);
+  openSheet(`<div class="pv">
+      <div class="k"><span>${esc(kind)}</span>${m.c ? `<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>` : ""}</div>
+      <div class="t">${esc(m.t)}</div>
+      ${m.k === "scp" && m.n ? `<div class="n">${esc(m.n)}</div>` : m.a ? `<div class="n">by ${esc(m.a)}</div>` : ""}
+      <div class="m"><span>+${fmt(m.r)}</span><span>${mins(m)} min</span>${isRead(id) ? `<span class="done">${ICON.check}Read</span>` : p > 0.02 ? `<span>${Math.round(p * 100)}% read</span>` : ""}</div>
+      <p class="sn wait" id="pvSn">Loading a summary…</p>
+      <div class="confirm"><button class="btn" id="pvSave">${isBm(id) ? "Saved" : "Save for later"}</button><button class="btn pri" id="pvOpen">Open</button></div>
+    </div>`, () => {
+    $("#pvOpen").onclick = () => { closeSheet(); openArticle(id); };
+    $("#pvSave").onclick = () => {
+      const bm = {...state.lib.bm};
+      if (bm[id]) delete bm[id]; else bm[id] = today();
+      state.lib = {...state.lib, bm}; save("lib");
+      $("#pvSave").textContent = bm[id] ? "Saved" : "Save for later";
+      toast(bm[id] ? "Saved to Library" : "Removed from Saved");
+    };
+  });
+  getChunk(m.ch).then(ch => {
+    if (pvId !== id || !$("#pvSn")) return;
+    const s = ch[id] ? summaryOf(ch[id]) : "";
+    const el = $("#pvSn"); el.classList.remove("wait");
+    el.textContent = s || "No summary for this one. Open it to read the file.";
+  }).catch(() => { const el = $("#pvSn"); if (el && pvId === id) el.textContent = "Couldn't load a summary. You can still open the file."; });
+}
 
 /* reading settings sheet */
 $("#rAa").onclick = () => {
@@ -1109,7 +1255,8 @@ $("#rAa").onclick = () => {
     <h4>Text size</h4><div class="stepper"><button data-sz="-1" aria-label="Smaller">A−</button><output id="szo">${s.size}px</output><button data-sz="1" aria-label="Larger">A+</button></div>
     <h4>Line spacing</h4><div class="seg">${[[1.45,"Tight"],[1.62,"Normal"],[1.85,"Airy"]].map(([v,l]) => `<button data-lh="${v}" aria-pressed="${s.lh==v}">${l}</button>`).join("")}</div>
     <h4>Margins</h4><div class="seg">${[["narrow","Wide margins"],["normal","Normal"],["wide","Full width"]].map(([v,l]) => `<button data-wd="${v}" aria-pressed="${s.width===v}">${l}</button>`).join("")}</div>
-    <h4>Alignment</h4><div class="seg"><button data-j="0" aria-pressed="${!s.just}">Ragged</button><button data-j="1" aria-pressed="${!!s.just}">Justified</button></div>`, () => {
+    <h4>Alignment</h4><div class="seg"><button data-j="0" aria-pressed="${!s.just}">Ragged</button><button data-j="1" aria-pressed="${!!s.just}">Justified</button></div>
+    <h4>Tapping an SCP link</h4><div class="seg"><button data-ln="preview" aria-pressed="${s.links !== "open"}">Show a preview</button><button data-ln="open" aria-pressed="${s.links === "open"}">Open it</button></div>`, () => {
     const B2 = $("#sheetB");
     const set = (k, v) => { state.set[k] = v; save("set"); applyReaderSettings(); };
     const press = (sel, el) => { B2.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === el)); };
@@ -1118,6 +1265,7 @@ $("#rAa").onclick = () => {
     B2.querySelectorAll("[data-lh]").forEach(b => b.onclick = () => { set("lh", +b.dataset.lh); press("[data-lh]", b); });
     B2.querySelectorAll("[data-wd]").forEach(b => b.onclick = () => { set("width", b.dataset.wd); press("[data-wd]", b); });
     B2.querySelectorAll("[data-j]").forEach(b => b.onclick = () => { set("just", +b.dataset.j); press("[data-j]", b); });
+    B2.querySelectorAll("[data-ln]").forEach(b => b.onclick = () => { set("links", b.dataset.ln); press("[data-ln]", b); });
     B2.querySelectorAll("[data-sz]").forEach(b => b.onclick = () => {
       const f = RS.scrollTop / Math.max(1, RS.scrollHeight - RS.clientHeight);
       set("size", Math.max(14, Math.min(28, state.set.size + +b.dataset.sz))); $("#szo").textContent = state.set.size + "px";
@@ -1140,6 +1288,7 @@ async function boot(){
   try { const t = sessionStorage.getItem("scpr:tab"); if (t && t !== "home") { tab = t; document.querySelectorAll(".tabs button").forEach(x => x.toggleAttribute("aria-current", x.dataset.tab === t)); document.querySelector(`.tabs button[data-tab="${t}"]`).setAttribute("aria-current","page"); } } catch {}
   render(); fitScreen();
   loadCanons();
+  loadLinks();
   $("#boot").style.transition = "opacity .3s"; $("#boot").style.opacity = "0"; setTimeout(() => $("#boot").remove(), 320);
   const h = decodeURIComponent((location.hash || "").slice(1)).toLowerCase();
   if (h && BY.has(h)) openArticle(h);
