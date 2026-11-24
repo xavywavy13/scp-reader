@@ -1,0 +1,40 @@
+name: Build canons
+
+# Reads the wiki's Canon Hub and every canon's hub page, and writes data/canons.gz.
+# Runs when the script changes; start it by hand from the Actions tab ("Run workflow")
+# to pick up new canons or new entries.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/build_canons.py
+      - .github/workflows/build-canons.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests lxml cssselect
+      - run: python scripts/build_canons.py
+      - name: Commit the canon list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/canons.gz
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Update canons from the wiki"
+          git pull --rebase origin main
+          git push

@@ -1,0 +1,278 @@
+"""Build data/canons.gz: every canon on the SCP Wiki's Canon Hub, with its articles in order.
+
+For each canon listed on https://scp-wiki.wikidot.com/canon-hub this reads the canon's own
+hub page and records:
+
+  - name, the Canon Hub blurb and its featured quote
+  - the canon's tag (from the hub page's tags; articles in the canon carry it)
+  - sections in the order the hub presents them (headings, tabs and collapsibles become
+    sections), each listing the articles it links to
+
+Which articles count as part of the canon: when the canon has a tag, an article must carry
+it. Tagged articles the hub doesn't link to are added at the end, oldest first, under
+"More from this canon". Canons without a tag use every archive article their hub links to.
+
+Runs on GitHub Actions (see .github/workflows/build-canons.yml). Needs data/index.gz.
+For a local test against the scp-data dump:  python scripts/build_canons.py --dump <scp-api/docs/data/scp>
+"""
+import gzip
+import json
+import re
+import sys
+import time
+from pathlib import Path
+
+import lxml.html
+
+ROOT = Path(__file__).resolve().parent.parent
+INDEX = ROOT / "data" / "index.gz"
+OUT = ROOT / "data" / "canons.gz"
+WIKI = "https://scp-wiki.wikidot.com"
+GENERIC_TAGS = {"hub", "canon-hub", "group-hub", "series-hub", "co-authored", "collaboration",
+                "illustrated", "audio", "video", "rewrite", "featured", "reviewers-spotlight",
+                "artwork", "contest", "event", "metadata", "tale", "scp", "goi-format"}
+WS = re.compile(r"\s+")
+
+
+# ---------------------------------------------------------------- fetching
+class WikiSource:
+    def __init__(self):
+        import requests
+        self.s = requests.Session()
+        self.s.headers["User-Agent"] = "SCP-Field-Reader/1.0 (personal reader; github.com/xavywavy13/scp-reader)"
+
+    def get(self, url, tries=3):
+        for i in range(tries):
+            try:
+                r = self.s.get(url, timeout=30)
+                if r.status_code == 200:
+                    return r.text
+                print(f"  {r.status_code} for {url}")
+                if r.status_code == 404:
+                    return None
+            except Exception as e:  # noqa: BLE001
+                print(f"  error {e} for {url}")
+            time.sleep(3 * (i + 1))
+        return None
+
+    def page(self, slug):
+        html = self.get(f"{WIKI}/{slug}")
+        time.sleep(1.0)  # be gentle with the wiki
+        if not html:
+            return None
+        doc = lxml.html.fromstring(html)
+        tags = [a.text_content().strip().lower() for a in doc.xpath('//div[contains(@class,"page-tags")]//a')]
+        pc = doc.get_element_by_id("page-content", None)
+        if pc is None:
+            return None
+        # app-style hubs keep their content in [[html]] blocks: fetch those frames too
+        for fr in pc.xpath('.//iframe[contains(@class,"html-block-iframe")]'):
+            src = fr.get("src") or ""
+            if src.startswith("//"):
+                src = "https:" + src
+            inner = self.get(src) if src.startswith("http") else None
+            if inner:
+                try:
+                    frag = lxml.html.fromstring(inner)
+                    body = frag.find(".//body")
+                    box = lxml.html.Element("div")
+                    for ch in list(body if body is not None else frag):
+                        box.append(ch)
+                    fr.getparent().replace(fr, box)
+                except Exception:  # noqa: BLE001
+                    pass
+        return pc, tags
+
+
+class DumpSource:
+    """Reads pages from the scp-data dump instead of the wiki (for local testing)."""
+    def __init__(self, path):
+        self.hubs = json.load(open(Path(path) / "hubs" / "index.json"))
+
+    def page(self, slug):
+        v = self.hubs.get(slug)
+        if not v:
+            return None
+        doc = lxml.html.fromstring(v["raw_content"])
+        pc = doc.get_element_by_id("page-content", None)
+        if pc is None:
+            pc = doc
+        source = v.get("raw_source") or ""
+        blocks = re.findall(r"\[\[html[^\]]*\]\](.*?)\[\[/html\]\]", source, re.S | re.I)
+        for fr, b in zip(pc.xpath('.//iframe[contains(@class,"html-block-iframe")]'), blocks):
+            try:
+                frag = lxml.html.fromstring(f"<div>{b}</div>")
+                fr.getparent().replace(fr, frag)
+            except Exception:  # noqa: BLE001
+                pass
+        tg = v.get("tags") or []
+        if isinstance(tg, str):
+            import ast
+            tg = ast.literal_eval(tg)
+        return pc, [t.lower() for t in tg]
+
+
+# ---------------------------------------------------------------- parsing
+def text(el):
+    return WS.sub(" ", el.text_content()).strip()
+
+
+def slug_of(href):
+    if not href:
+        return None
+    m = re.match(r"^(?:https?://(?:www\.)?(?:scp-wiki\.wikidot\.com|scpwiki\.com|scp-wiki\.net))?/([^/#?:]+)/?(?:[#?].*)?$", href.strip())
+    return m.group(1).lower() if m else None
+
+
+def canon_list(src):
+    got = src.page("canon-hub")
+    if not got:
+        sys.exit("Couldn't read the Canon Hub. Nothing changed.")
+    pc, _ = got
+    out, unmaintained = [], False
+    for el in pc.iter():
+        if not isinstance(el.tag, str):
+            continue
+        if el.tag in ("h1", "h2") and not el.xpath('ancestor::div[contains(@class,"canon-block")]'):
+            if "unmaintained" in text(el).lower():
+                unmaintained = True
+            continue
+        cls = el.get("class") or ""
+        if "canon-block" not in cls.split() or "opener" in cls.split():
+            continue
+        h = el.xpath(".//h2")
+        link = el.xpath(".//h2//a[@href]")
+        if not h or not link:
+            continue
+        slug = slug_of(link[0].get("href"))
+        if not slug:
+            continue
+        paras = [text(p) for p in el.xpath("./p")]
+        snip = el.xpath('.//div[contains(@class,"snippet")]')
+        quote, qsrc = "", None
+        if snip:
+            quote = " ".join(text(p) for p in snip[0].xpath("./p"))
+            sa = snip[0].xpath('.//div[contains(@class,"source")]/a[@href]')
+            if sa:
+                qsrc = {"id": slug_of(sa[0].get("href")), "t": text(sa[0])}
+            by = snip[0].xpath('.//div[contains(@class,"source")]//span[contains(@class,"printuser")]')
+            if by and qsrc:
+                qsrc["a"] = text(by[-1])
+        out.append({"id": slug, "t": text(h[0]), "d": " ".join(p for p in paras if p),
+                    "q": quote[:600], "qs": qsrc, "un": unmaintained})
+    return out
+
+
+def tab_titles(navset):
+    return [text(li) for li in navset.xpath('./ul[contains(@class,"yui-nav")]/li')]
+
+
+def hub_sections(pc, accept, canon_name):
+    """Walk the hub in reading order. Headings, tab titles and collapsible labels start a
+    new section; every accepted article link is placed in the current section."""
+    sections, seen = [], set()
+    cur = {"t": "", "m": []}
+    sections.append(cur)
+
+    def start(title):
+        nonlocal cur
+        title = WS.sub(" ", title or "").strip(" :–—-")
+        title = re.sub(r"(?i)\bclick here\b!?", "Start here", title).replace("? Start here", ": start here")
+        if not title or title.lower() == canon_name.lower() or len(title) > 80:
+            return
+        if cur["t"] == title:
+            return
+        cur = {"t": title, "m": []}
+        sections.append(cur)
+
+    pane_title = {}
+    for ns in pc.xpath('.//div[contains(@class,"yui-navset")]'):
+        titles = tab_titles(ns)
+        for i, pane in enumerate(ns.xpath('./div[contains(@class,"yui-content")]/div')):
+            if i < len(titles):
+                pane_title[pane] = titles[i]
+
+    for el in pc.iter():
+        if not isinstance(el.tag, str):
+            continue
+        cls = (el.get("class") or "").split()
+        if el in pane_title:
+            start(pane_title[el])
+        elif el.tag in ("h1", "h2", "h3", "h4") and not el.xpath("ancestor::a"):
+            start(text(el))
+        elif "collapsible-block-folded" in cls:
+            start(re.sub(r"^\+\s*", "", text(el)))
+        elif el.tag == "a":
+            if el.xpath('ancestor::*[contains(@class,"breadcrumbs") or contains(@class,"footer-wikiwalk-nav") or contains(@class,"page-tags") or contains(@class,"licensebox") or contains(@class,"yui-nav")]'):
+                continue
+            if el.xpath('ancestor::*[contains(@class,"collapsible-block-unfolded-link")]'):
+                continue
+            s = slug_of(el.get("href"))
+            if s and s not in seen and accept(s):
+                seen.add(s)
+                cur["m"].append(s)
+    return [s for s in sections if s["m"]]
+
+
+def pick_tag(hub_tags, tag_count, canon):
+    """The canon's own tag: a non-generic hub tag that many articles carry."""
+    cands = [t for t in hub_tags if t not in GENERIC_TAGS and not t.startswith("_") and tag_count.get(t, 0) >= 3]
+    if not cands:
+        return None
+    words = set(re.findall(r"[a-z0-9]+", (canon["t"] + " " + canon["id"]).lower()))
+    def score(t):
+        overlap = len(set(t.split("-")) & words)
+        return (overlap, tag_count.get(t, 0))
+    best = max(cands, key=score)
+    return best if score(best)[0] > 0 or len(cands) == 1 else None
+
+
+# ---------------------------------------------------------------- main
+def main():
+    src = DumpSource(sys.argv[sys.argv.index("--dump") + 1]) if "--dump" in sys.argv else WikiSource()
+    index = json.loads(gzip.decompress(INDEX.read_bytes()))
+    arts = {m["id"]: m for m in index["a"]}
+    tags = index["tags"]
+    tag_count = dict(zip(tags, index.get("tagCount", [])))
+    by_tag = {}
+    for m in index["a"]:
+        for g in m["g"]:
+            by_tag.setdefault(tags[g], []).append(m["id"])
+
+    canons = canon_list(src)
+    print(f"Canon Hub lists {len(canons)} canons")
+    out = []
+    for n, c in enumerate(canons, 1):
+        got = src.page(c["id"])
+        hub_tags = got[1] if got else []
+        tag = pick_tag(hub_tags, tag_count, c)
+        members = set(by_tag.get(tag, [])) if tag else None
+
+        def accept(s):
+            return s in arts and (members is None or s in members) and s != c["id"]
+
+        sections = hub_sections(got[0], accept, c["t"]) if got else []
+        listed = {s for sec in sections for s in sec["m"]}
+        if members:
+            rest = sorted((s for s in members if s not in listed and s in arts),
+                          key=lambda s: (arts[s].get("d") or "9999", s))
+            if rest:
+                sections.append({"t": "More from this canon" if listed else "", "m": rest})
+        total = sum(len(s["m"]) for s in sections)
+        if total < 2:
+            print(f"[{n}/{len(canons)}] {c['t']}: skipped ({total} articles found)")
+            continue
+        if sections and not sections[0]["t"] and len(sections) > 1:
+            sections[0]["t"] = "Start here"
+        if c["qs"] and c["qs"].get("id") not in arts:
+            c["qs"]["id"] = None
+        out.append({**c, "tag": tag, "s": sections, "n": total})
+        print(f"[{n}/{len(canons)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
+
+    data = {"v": 1, "built": time.strftime("%Y-%m-%d"), "c": out}
+    OUT.write_bytes(gzip.compress(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode(), 9))
+    print(f"Wrote {len(out)} canons to {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
+
+
+if __name__ == "__main__":
+    main()

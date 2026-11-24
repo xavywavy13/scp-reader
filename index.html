@@ -111,6 +111,40 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .chipline{display:flex;flex-wrap:wrap;gap:8px}
 .hub{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px;display:flex;gap:8px;align-items:center}
 .hub span{font:500 12px var(--f-mono);color:var(--muted)}
+.hub svg{width:14px;height:14px;color:var(--accent)}
+
+/* canons */
+.ccard{flex:0 0 250px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ccard.wide{flex:none;width:100%}
+.ccard:active{transform:scale(.985)}
+.ccard .k{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.ccard .t{font:700 24px/1 var(--f-display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.ccard .d{font:400 15px/1.4 var(--f-read);color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:4.2em}
+.ccard .m{font:400 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:auto;padding-top:4px}
+.ccard .bar{margin-top:0}
+.clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.chero{padding:10px 0 6px;display:grid;gap:10px}
+.chero .ck{font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.chero .ck span{color:var(--muted)}
+.chero .ct{font:700 clamp(38px,11vw,60px)/.92 var(--f-display);text-transform:uppercase;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.chero .cd{font:400 18px/1.5 var(--f-read);margin:0;max-width:36em}
+.cq{margin:4px 0;padding:2px 0 2px 14px;border-left:3px solid var(--accent);font:italic 400 16px/1.55 var(--f-read);color:var(--muted);max-width:36em}
+.cq p{margin:0;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.cq footer{font:normal 500 12px var(--f-mono);margin-top:8px;color:var(--faint)}
+.cq footer button{color:var(--accent);text-decoration:underline;text-underline-offset:3px;font:inherit}
+.chero .cs{font:400 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.cgo{display:grid;gap:2px;text-align:left;padding:14px 16px;border-radius:14px;background:var(--accent);color:var(--accent-ink);margin-top:4px}
+.cgo small{font:600 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.cgo b{font:700 22px/1.05 var(--f-display);text-transform:uppercase}
+.cgo span{font:italic 400 15px/1.3 var(--f-read);opacity:.92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cgo:active{transform:scale(.985)}
+.csec{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:600 12px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:24px 0 6px}
+.csec span:last-child{font-variant-numeric:tabular-nums;color:var(--faint);flex:0 0 auto}
+.row.num{grid-template-columns:2.1em 1fr auto}
+.row .no{font:500 12px var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums;align-self:start;padding-top:3px}
+.cwiki{margin:28px 0 0;text-align:center}
+.cwiki a{display:inline-flex;gap:8px;align-items:center;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none}
+.cwiki svg{width:16px;height:16px}
 
 /* class chip */
 .cls{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cc,var(--c-neutral));white-space:nowrap}
@@ -209,6 +243,9 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .rhead .meta button{color:var(--r-accent);text-decoration:underline;text-underline-offset:3px;font:inherit}
 .rhead .tagl{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .rhead .tagl button{font:400 12px var(--f-mono);padding:4px 9px;border-radius:999px;background:var(--r-soft);color:var(--r-muted)}
+.rhead .canl{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.rhead .canl button{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 11px;border-radius:999px;border:1px solid var(--r-accent);color:var(--r-accent)}
+.rhead .canl svg{width:14px;height:14px}
 .rbody{overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
 .reader[data-just="1"] .rbody p{text-align:justify}
 .rbody p{margin:0 0 .95em}
@@ -273,6 +310,16 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .nav2 small{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-muted)}
 .nav2 b{font:700 18px/1.1 var(--f-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav2 span{font:400 13px/1.3 var(--f-read);color:var(--r-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccanon{border:1px solid var(--r-line);border-radius:14px;padding:14px;display:grid;gap:8px;background:var(--r-soft)}
+.ccanon .k{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted)}
+.ccanon .cn{font:700 26px/1 var(--f-display);text-transform:uppercase;text-align:left;color:var(--r-ink)}
+.ccanon .m{font:400 13px var(--f-mono);color:var(--r-muted);font-variant-numeric:tabular-nums}
+.ccanon .bar{background:var(--r-line);margin:0}
+.ccanon .bar i{background:var(--r-accent)}
+.ccanon .cnext{display:grid;gap:2px;text-align:left;padding:12px 14px;border-radius:12px;background:var(--r-accent);color:var(--r-bg);min-width:0}
+.ccanon .cnext small{font:600 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccanon .cnext b{font:700 20px/1.1 var(--f-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccanon .cnext span{font:italic 400 14px/1.3 var(--f-read);opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lic{font-size:12.5px;line-height:1.55;color:var(--r-muted)}
 .lic a{color:var(--r-accent)}
 .loading{padding:60px 0;text-align:center;font:500 13px var(--f-mono);letter-spacing:.12em;color:var(--r-muted);text-transform:uppercase}
@@ -303,6 +350,11 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 <section class="overlay" id="listO" aria-label="List">
   <div class="ohead"><button class="iconbtn" data-close="listO" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h3 id="listT"></h3><span style="width:40px"></span></div>
   <div class="obody" id="listB"></div>
+</section>
+
+<section class="overlay" id="canonO" aria-label="Canon">
+  <div class="ohead"><button class="iconbtn" data-close="canonO" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h3 id="canonT"></h3><span style="width:40px"></span></div>
+  <div class="obody" id="canonB"></div>
 </section>
 
 <section class="overlay reader" id="reader" aria-label="Reader">
@@ -341,6 +393,7 @@ const ICON = {
   dice:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg>',
   book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5.5c3-1 5.5-.8 8 1 2.5-1.8 5-2 8-1v13c-3-1-5.5-.8-8 1-2.5-1.8-5-2-8-1z"/><path d="M12 6.5v13"/></svg>',
   star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/></svg>',
+  canon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3.5l8.5 4.6-8.5 4.6-8.5-4.6z"/><path d="M3.5 12.4l8.5 4.6 8.5-4.6"/><path d="M3.5 16.4l8.5 4.6 8.5-4.6"/></svg>',
   ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></svg>',
 };
 const ring = p => { const r=9, c=2*Math.PI*r; return `<svg class="ring" viewBox="0 0 22 22"><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.5"/><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 11 11)" stroke-linecap="round"/></svg>`; };
@@ -526,7 +579,8 @@ function renderHome(){
   const readCount = Object.keys(state.lib.read).filter(id => BY.has(id)).length;
   const readScp = scps.filter(m => isRead(m.id)).length;
   const topUnread = scps.filter(m => !isRead(m.id)).sort((a,b) => b.r - a.r).slice(0, 14);
-  const hubs = IDX.hubs.slice(0, 16);
+  const hubs = IDX.hubs.filter(x => !/^SCP Series/i.test(x.t)).slice(0, 16);
+  const homeCanons = canonsSorted("yours").slice(0, 10);
   viewEl.innerHTML = `
     <header class="top"><h1 class="wordmark"><small>Secure · Contain · Protect</small>Field Reader</h1></header>
     ${cont ? `<button class="resume" data-id="${esc(cont.id)}"><span class="lbl">Continue reading</span><span class="t">${esc(cont.t)}</span>${cont.n||cont.k!=="scp"?`<span class="n">${esc(cont.k==="scp"?cont.n:sub(cont))}</span>`:""}<div class="bar"><i style="width:${Math.round(inprog[0][1][0]*100)}%"></i></div></button>` : ""}
@@ -541,11 +595,13 @@ function renderHome(){
       <button class="ser" data-kind="tale"><b>Tales</b><span>${fmt(ALL.filter(m=>m.k==="tale").length)} stories</span></button>
       <button class="ser" data-kind="goi"><b>Groups of Interest</b><span>${fmt(ALL.filter(m=>m.k==="goi").length)} files</span></button>
     </div>
+    ${CANONS.length ? `<h2 class="sec">Canons<button data-goto="canons">All ${fmt(CANONS.length)}</button></h2>
+    <div class="hscroll">${homeCanons.map(c => canonCardHTML(c)).join("")}</div>` : ""}
     <h2 class="sec">Highest rated, not yet read<button data-goto="top">See all</button></h2>
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
-    <h2 class="sec">Collections &amp; canons<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
+    <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 10</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive snapshot ${esc(IDX.built)} · App version 11</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -557,6 +613,8 @@ function randomFrom(kind){
 }
 viewEl.addEventListener("click", e => {
   const t = e.target.closest("button,[data-id]"); if (!t) return;
+  if (t.dataset.canon) return openCanon(t.dataset.canon);
+  if (t.dataset.goto === "canons") { B.kind = "canon"; return go("browse"); }
   if (t.dataset.id && !t.classList.contains("row")) return openArticle(t.dataset.id);
   if (t.dataset.rand) return randomFrom(t.dataset.rand);
   if (t.dataset.series) { Object.assign(B, {kind:"scp", series:t.dataset.series, cls:"", sort:"num", tag:null}); return go("browse"); }
@@ -565,10 +623,11 @@ viewEl.addEventListener("click", e => {
   if (t.dataset.goto === "hubs") return openHubs();
   if (t.dataset.hub) return openHub(t.dataset.hub);
 });
-function go(t){ document.querySelector(`.tabs button[data-tab="${t}"]`).click(); }
+function go(t){ const b = document.querySelector(`.tabs button[data-tab="${t}"]`); if (tab === t) { render(); mainEl.scrollTop = 0; } else b.click(); }
 
 /* ---------------- browse ---------------- */
-const B = Object.assign({kind:"scp", series:"", cls:"", sort:"num", tag:null}, LS.get("browse", {}));
+const B = Object.assign({kind:"scp", series:"", cls:"", sort:"num", tag:null, csort:"yours"}, LS.get("browse", {}));
+const KINDS = [["scp","SCPs"],["tale","Tales"],["goi","GoI"],["canon","Canons"]];
 const CLASSES = ["safe","euclid","keter","thaumiel","apollyon","archon","neutralized","explained","pending","esoteric-class"];
 function browseItems(){
   let it = ALL.filter(m => m.k === B.kind);
@@ -586,12 +645,13 @@ function browseItems(){
 }
 function renderBrowse(soft){
   const keepTop = soft ? mainEl.scrollTop : 0;
-  LS.set("browse", {kind:B.kind, series:B.series, cls:B.cls, sort:B.sort, tag:B.tag});
+  LS.set("browse", {kind:B.kind, series:B.series, cls:B.cls, sort:B.sort, tag:B.tag, csort:B.csort});
+  if (B.kind === "canon") return renderCanonBrowse(soft, keepTop);
   const ser = seriesStats().map(([k]) => k);
   const items = browseItems();
   viewEl.innerHTML = `
     <header class="top"><h1 class="wordmark"><small>Browse</small>Archive</h1><button class="iconbtn" id="tagBtn" aria-label="Filter by tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg></button></header>
-    <div class="seg" role="group" aria-label="Type">${[["scp","SCPs"],["tale","Tales"],["goi","GoI"]].map(([k,l]) => `<button data-k="${k}" aria-pressed="${B.kind===k}">${l}</button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Type">${KINDS.map(([k,l]) => `<button data-k="${k}" aria-pressed="${B.kind===k}">${l}</button>`).join("")}</div>
     ${B.kind === "scp" ? `<div class="chips" aria-label="Series"><button class="chip" data-s="" aria-pressed="${!B.series}">All series</button>${ser.map(k => `<button class="chip" data-s="${esc(k)}" aria-pressed="${B.series===k}">${esc(seriesLabel(k))}</button>`).join("")}</div>
     <div class="chips" aria-label="Object class"><button class="chip" data-c="" aria-pressed="${!B.cls}">Any class</button>${CLASSES.map(c => `<button class="chip" data-c="${c}" aria-pressed="${B.cls===c}"><span class="cls" data-c="${c}">${esc(CLASS_LABEL(c))}</span></button>`).join("")}</div>` : ""}
     <div class="ctl">
@@ -615,6 +675,27 @@ function renderBrowse(soft){
     if (IS_IOS) ac.scrollIntoView({inline:"center", block:"nearest"});
     else { const row = ac.parentElement; row.scrollLeft = ac.offsetLeft - (row.clientWidth - ac.offsetWidth) / 2; }
   }
+  if (soft) mainEl.scrollTop = keepTop;
+}
+function renderCanonBrowse(soft, keepTop){
+  const list = canonsSorted(B.csort || "yours");
+  viewEl.innerHTML = `
+    <header class="top"><h1 class="wordmark"><small>Browse</small>Archive</h1></header>
+    <div class="seg" role="group" aria-label="Type">${KINDS.map(([k,l]) => `<button data-k="${k}" aria-pressed="${B.kind===k}">${l}</button>`).join("")}</div>
+    <div class="ctl">
+      <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="cq" type="search" placeholder="Find a canon" autocomplete="off" spellcheck="false"></div>
+      <select id="csort" aria-label="Sort">${[["yours","Yours first"],["az","A–Z"],["size","Most files"]].map(([v,l]) => `<option value="${v}"${(B.csort||"yours")===v?" selected":""}>${l}</option>`).join("")}</select>
+    </div>
+    <div class="count" id="ccount">${CANONS.length ? `${fmt(list.length)} canons` : ""}</div>
+    ${CANONS.length ? `<div class="clist" id="clist">${list.map(c => canonCardHTML(c, true)).join("")}</div>`
+      : `<div class="empty"><b>${canonsState === "failed" ? "Couldn't load canons" : "Loading canons"}</b>${canonsState === "failed" ? "Check your connection and reopen the app." : "One moment."}</div>`}`;
+  viewEl.querySelectorAll(".seg button").forEach(b => b.onclick = () => { B.kind = b.dataset.k; B.series=""; B.cls=""; if (B.kind!=="scp" && B.sort==="num") B.sort="rating"; render(); });
+  $("#csort").onchange = e => { B.csort = e.target.value; render(); };
+  $("#cq").oninput = e => {
+    const q = e.target.value.trim().toLowerCase(); let n = 0;
+    viewEl.querySelectorAll("#clist .ccard").forEach(c => { const on = !q || c.textContent.toLowerCase().includes(q); c.hidden = !on; n += on; });
+    $("#ccount").textContent = `${fmt(n)} canons`;
+  };
   if (soft) mainEl.scrollTop = keepTop;
 }
 function openTags(){
@@ -663,7 +744,9 @@ function renderSearch(){
       return;
     }
     const r = search(q.value);
-    res.innerHTML = `<div class="count">${r.length >= 300 ? "300+" : fmt(r.length)} results</div><div id="sl"></div>`;
+    const ql = q.value.trim().toLowerCase();
+    const cm = /^(#|by:)/.test(ql) ? [] : CANONS.filter(c => (c.t + " " + (c.tag || "").replace(/-/g, " ")).toLowerCase().includes(ql)).slice(0, 8);
+    res.innerHTML = `${cm.length ? `<h2 class="sec">Canons</h2><div class="chipline">${cm.map(c => `<button class="hub" data-canon="${esc(c.id)}">${ICON.canon}${esc(c.t)}<span>${c.all.length}</span></button>`).join("")}</div><h2 class="sec">Files</h2>` : ""}<div class="count">${r.length >= 300 ? "300+" : fmt(r.length)} results</div><div id="sl"></div>`;
     lazyList($("#sl"), r, `<div class="empty"><b>No match</b>Nothing in the archive fits “${esc(q.value)}”.</div>`);
   };
   let t; q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(run, 120); });
@@ -719,6 +802,117 @@ function openHubs(){
 }
 document.querySelector('[data-close="listO"]').onclick = () => $("#listO").classList.remove("open");
 
+/* ---------------- canons ---------------- */
+let CANONS = [], CANON_BY = new Map(), CANON_OF = new Map(), canonsState = "loading";
+let canonId = null, canonSort = "hub", curCanon = null;
+async function loadCanons(){
+  try {
+    const d = await fetchGz("data/canons.gz");
+    CANONS = (d.c || []).map(c => {
+      c.s = (c.s || []).map(s => ({t: s.t, m: s.m.filter(id => BY.has(id))})).filter(s => s.m.length);
+      c.all = [...new Set(c.s.flatMap(s => s.m))];
+      return c;
+    }).filter(c => c.all.length >= 2);
+    CANON_BY = new Map(CANONS.map(c => [c.id, c]));
+    CANON_OF = new Map();
+    for (const c of CANONS) for (const id of c.all) { if (!CANON_OF.has(id)) CANON_OF.set(id, []); CANON_OF.get(id).push(c); }
+    canonsState = "ready";
+  } catch (e) { canonsState = "failed"; }
+  refresh();
+}
+function canonStats(c){
+  let read = 0, words = 0, last = 0, inprog = null, inprogTs = 0;
+  for (const id of c.all) {
+    const m = BY.get(id); words += m.w;
+    if (isRead(id)) { read++; last = Math.max(last, state.lib.read[id] || 0); continue; }
+    const p = state.prog[id];
+    if (p && p[0] > 0.02) { last = Math.max(last, p[1]); if (p[1] > inprogTs) { inprogTs = p[1]; inprog = id; } }
+  }
+  return {read, n: c.all.length, hours: words / 230 / 60, last, inprog, next: inprog || c.all.find(id => !isRead(id)) || null};
+}
+const hrs = h => h < 1 ? Math.max(5, Math.round(h * 12) * 5) + " min" : (h < 10 ? h.toFixed(1).replace(/\.0$/, "") : Math.round(h)) + " h";
+const sortName = t => t.replace(/^the\s+/i, "").toLowerCase();
+function canonsSorted(mode){
+  const list = CANONS.map(c => [c, canonStats(c)]);
+  if (mode === "az") list.sort((a, b) => sortName(a[0].t).localeCompare(sortName(b[0].t)));
+  else if (mode === "size") list.sort((a, b) => b[1].n - a[1].n);
+  else list.sort((a, b) => (b[1].last - a[1].last) || (a[0].un - b[0].un) || (b[1].n - a[1].n));
+  return list.map(x => x[0]);
+}
+function canonCardHTML(c, wide){
+  const s = canonStats(c);
+  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">Canon · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
+}
+function canonRow(m, n){
+  const h = rowHTML(m);
+  return n ? h.replace('class="row', 'class="row num').replace('<div class="l">', `<span class="no">${String(n).padStart(2, "0")}</span><div class="l">`) : h;
+}
+function openCanon(id, fromReader){
+  if (!CANON_BY.has(id)) return;
+  if (canonId !== id) canonSort = "hub";
+  canonId = id;
+  const o = $("#canonO"); o.style.zIndex = fromReader ? 55 : "";
+  renderCanon(true);
+  o.classList.add("open");
+}
+function closeCanon(){ const o = $("#canonO"); o.classList.remove("open"); o.style.zIndex = ""; refresh(); }
+function renderCanon(top){
+  const c = CANON_BY.get(canonId); if (!c) return;
+  const s = canonStats(c), body = $("#canonB"), keep = top ? 0 : body.scrollTop;
+  $("#canonT").textContent = c.t;
+  const nm = BY.get(s.next || c.all[0]);
+  const go = s.read === s.n ? "Read it again" : s.inprog ? "Continue" : s.read ? "Up next" : "Start reading";
+  const hide = !!state.set.hideReadCanon, vis = id => !(hide && isRead(id));
+  const num = new Map(c.all.map((id, i) => [id, i + 1]));
+  let list;
+  if (canonSort === "hub") {
+    list = c.s.map(sec => {
+      const ids = sec.m.filter(vis); if (!ids.length) return "";
+      return `${sec.t ? `<h3 class="csec"><span>${esc(sec.t)}</span><span>${sec.m.filter(isRead).length}/${sec.m.length}</span></h3>` : ""}<div class="rows">${ids.map(id => canonRow(BY.get(id), num.get(id))).join("")}</div>`;
+    }).join("");
+  } else {
+    const ms = c.all.filter(vis).map(id => BY.get(id));
+    if (canonSort === "old") ms.sort((a, b) => (a.d || "9999").localeCompare(b.d || "9999")); else ms.sort((a, b) => b.r - a.r);
+    list = ms.length ? `<div class="rows" style="margin-top:14px">${ms.map(m => canonRow(m)).join("")}</div>` : "";
+  }
+  if (!list) list = `<div class="empty"><b>All read</b>Turn off Hide read to see the whole canon again.</div>`;
+  const qs = c.qs;
+  body.innerHTML = `<div class="chero">
+      <div class="ck">Canon${c.un ? ` · <span>unmaintained</span>` : ""}</div>
+      <h2 class="ct">${esc(c.t)}</h2>
+      ${c.d ? `<p class="cd">${esc(c.d)}</p>` : ""}
+      ${c.q ? `<blockquote class="cq"><p>${esc(c.q)}</p>${qs ? `<footer>From ${qs.id && BY.has(qs.id) ? `<button data-id="${esc(qs.id)}">${esc(qs.t)}</button>` : esc(qs.t)}${qs.a ? ` by ${esc(qs.a)}` : ""}</footer>` : ""}</blockquote>` : ""}
+      <div class="cs">${fmt(s.n)} files · about ${hrs(s.hours)} · ${fmt(s.read)} read</div>
+      <div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div>
+      ${nm ? `<button class="cgo" data-id="${esc(nm.id)}"><small>${go}</small><b>${esc(nm.t)}</b>${nm.k === "scp" ? (nm.n ? `<span>${esc(nm.n)}</span>` : "") : (nm.a ? `<span>by ${esc(nm.a)}</span>` : "")}</button>` : ""}
+    </div>
+    <div class="ctl"><div class="seg" role="group" aria-label="Order" style="flex:1">${[["hub", "Hub order"], ["old", "Oldest"], ["rating", "Top rated"]].map(([k, l]) => `<button data-cs="${k}" aria-pressed="${canonSort === k}">${l}</button>`).join("")}</div></div>
+    <div class="ctl"><span class="count" style="margin:0">${canonSort === "hub" ? "In the order the canon's hub lists them" : canonSort === "old" ? "In the order they were posted" : "Highest rated first"}</span><label class="tog"><input type="checkbox" id="cHide"${hide ? " checked" : ""}>Hide read</label></div>
+    ${list}
+    <p class="cwiki"><a href="https://scp-wiki.wikidot.com/${esc(c.id)}" target="_blank" rel="noopener">${ICON.ext}Open the canon hub on the wiki</a></p>`;
+  body.scrollTop = keep;
+}
+$("#canonB").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.cs) { canonSort = t.dataset.cs; return renderCanon(); }
+  if (t.dataset.id) return openArticle(t.dataset.id, {canon: canonId});
+});
+$("#canonB").addEventListener("change", e => { if (e.target.id === "cHide") { state.set.hideReadCanon = e.target.checked ? 1 : 0; save("set"); renderCanon(); } });
+document.querySelector('[data-close="canonO"]').onclick = closeCanon;
+function canonEndHTML(m){
+  const list = CANON_OF.get(m.id); if (!list) return "";
+  const c = (curCanon && list.find(x => x.id === curCanon)) || list[0];
+  const i = c.all.indexOf(m.id), s = canonStats(c), nx = c.all[i + 1] ? BY.get(c.all[i + 1]) : null;
+  const sec = c.s.find(x => x.m.includes(m.id));
+  return `<div class="ccanon">
+      <div class="k">Part of a canon${list.length > 1 ? ` · also in ${list.length - 1} more` : ""}</div>
+      <button class="cn" data-canon="${esc(c.id)}">${esc(c.t)}</button>
+      <div class="m">${sec && sec.t ? esc(sec.t) + " · " : ""}No. ${i + 1} of ${fmt(s.n)} · ${fmt(s.read)} read</div>
+      <div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div>
+      ${nx ? `<button class="cnext" data-id="${esc(nx.id)}" data-cctx="${esc(c.id)}"><small>Next in ${esc(c.t)}</small><b>${esc(nx.t)}</b>${nx.k === "scp" ? (nx.n ? `<span>${esc(nx.n)}</span>` : "") : (nx.a ? `<span>by ${esc(nx.a)}</span>` : "")}</button>` : `<div class="m">This is the last file in the canon's list.</div>`}
+    </div>`;
+}
+
 /* ---------------- sheets & toast ---------------- */
 let sheetClose = null;
 function openSheet(html, after){
@@ -773,6 +967,7 @@ function headerHTML(m){
   const eyebrow = m.k === "scp" ? `<span>${esc(seriesLabel(seriesKey(m.s)))}</span>${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}` : `<span>${m.k === "goi" ? "Group of Interest" : "Tale"}</span>`;
   return `<header class="rhead"><div class="eyebrow">${eyebrow}</div><h1>${esc(m.t)}</h1>${m.k==="scp"&&m.n?`<p class="nick">${esc(m.n)}</p>`:""}
     <div class="meta">${m.a?`<span>by <button data-author="${esc(m.a)}">${esc(m.a)}</button></span>`:""}<span>+${fmt(m.r)}</span><span>${mins(m)} min · ${fmt(m.w)} words</span>${m.d?`<span>${esc(m.d)}</span>`:""}</div>
+    ${(CANON_OF.get(m.id) || []).length ? `<div class="canl">${CANON_OF.get(m.id).map(c => `<button data-canon="${esc(c.id)}">${ICON.canon}${esc(c.t)}</button>`).join("")}</div>` : ""}
     ${tags?`<div class="tagl">${tags}</div>`:""}</header>`;
 }
 function endHTML(m){
@@ -780,6 +975,7 @@ function endHTML(m){
   const cell = (x, dir) => x ? `<button data-id="${esc(x.id)}"><small>${dir}</small><b>${esc(x.t)}</b><span>${esc(x.k==="scp"?(x.n||"—"):(x.a||""))}</span></button>` : `<span></span>`;
   return `<footer class="rend">
     <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
+    ${canonEndHTML(m)}
     ${p||n?`<div class="nav2">${cell(p,"‹ Previous")}${cell(n,"Next ›")}</div>`:""}
     <p class="lic">“${esc(m.k==="scp"?(m.n?m.t+" – "+m.n:m.t):m.t)}” by ${esc(m.a||"its authors")}, from the <a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">SCP Wiki</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Images load from the SCP Wiki.</p>
   </footer>`;
@@ -787,8 +983,10 @@ function endHTML(m){
 async function openArticle(id, opts = {}){
   const m = BY.get(id); if (!m) return;
   if ($("#listO").style.zIndex) { $("#listO").classList.remove("open"); $("#listO").style.zIndex = ""; }
-  if (cur && !opts.replace) { persistProgress(); stack.push(cur.id); }
+  if ($("#canonO").style.zIndex) { $("#canonO").classList.remove("open"); $("#canonO").style.zIndex = ""; }
+  if (cur && !opts.replace) { persistProgress(); stack.push({id: cur.id, canon: curCanon}); }
   cur = m; openedAt = Date.now();
+  curCanon = opts.canon || null;
   applyReaderSettings();
   R.classList.add("open"); R.classList.remove("hidebar", "scrolled");
   paintBehindReader();
@@ -845,8 +1043,9 @@ $("#rBm").onclick = () => {
 };
 function closeReader(){
   persistProgress();
-  if (stack.length) { const id = stack.pop(); cur = null; openArticle(id, {replace:true}); return; }
+  if (stack.length) { const x = stack.pop(); cur = null; openArticle(x.id, {replace:true, canon:x.canon}); return; }
   R.classList.remove("open"); cur = null; document.documentElement.style.background = document.body.style.background = ""; refresh();
+  if ($("#canonO").classList.contains("open")) renderCanon();
 }
 $("#rBack").onclick = closeReader;
 let lastY = 0;
@@ -893,7 +1092,8 @@ RW.addEventListener("click", e => {
     return;
   }
   if (a.getAttribute("href") === "#") { e.preventDefault(); return; }
-  if (a.dataset.id) return openArticle(a.dataset.id);
+  if (a.dataset.canon) return openCanon(a.dataset.canon, true);
+  if (a.dataset.id) return openArticle(a.dataset.id, {canon: a.dataset.cctx || null});
   if (a.dataset.author) { const au = a.dataset.author; return openList("By " + au, ALL.filter(m => m.a === au).sort((x,y)=>y.r-x.r), true); }
   if (a.dataset.tag) { const ti = +a.dataset.tag; return openList("#" + IDX.tags[ti], ALL.filter(m => m.g.includes(ti)).sort((x,y)=>y.r-x.r), true); }
   if (a.id === "mRead") return setRead(cur.id, !isRead(cur.id));
@@ -939,6 +1139,7 @@ async function boot(){
   clearInterval(tick); bar.style.width = "100%";
   try { const t = sessionStorage.getItem("scpr:tab"); if (t && t !== "home") { tab = t; document.querySelectorAll(".tabs button").forEach(x => x.toggleAttribute("aria-current", x.dataset.tab === t)); document.querySelector(`.tabs button[data-tab="${t}"]`).setAttribute("aria-current","page"); } } catch {}
   render(); fitScreen();
+  loadCanons();
   $("#boot").style.transition = "opacity .3s"; $("#boot").style.opacity = "0"; setTimeout(() => $("#boot").remove(), 320);
   const h = decodeURIComponent((location.hash || "").slice(1)).toLowerCase();
   if (h && BY.has(h)) openArticle(h);
