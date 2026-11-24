@@ -167,16 +167,31 @@ def tab_titles(navset):
     return [text(li) for li in navset.xpath('./ul[contains(@class,"yui-nav")]/li')]
 
 
+SKIP_SECTION = re.compile(r"(?i)\b(latest|newest|most recent|recent(ly)?|random|featured|spotlight|new (entries|articles|additions))\b")
+
+
+def norm(t):
+    return re.sub(r"[^a-z0-9]+", " ", (t or "").lower()).strip()
+
+
 def hub_sections(pc, accept, canon_name):
     """Walk the hub in reading order. Headings, tab titles and collapsible labels start a
-    new section; every accepted article link is placed in the current section."""
+    new section; every accepted article link is placed in the current section. Sections
+    such as "Latest entries" are skipped so they don't pull articles out of reading order."""
     sections, seen = [], set()
     cur = {"t": "", "m": []}
     sections.append(cur)
+    cname = norm(canon_name)
 
     def start(title):
         nonlocal cur
         title = WS.sub(" ", title or "").strip(" :–—-")
+        if SKIP_SECTION.search(title):
+            cur = {"t": title, "m": [], "skip": True}
+            sections.append(cur)
+            return
+        if cname and norm(title).replace(" hub", "") == cname:
+            return
         title = re.sub(r"(?i)\bclick here\b!?", "Start here", title).replace("? Start here", ": start here")
         if not title or title.lower() == canon_name.lower() or len(title) > 80:
             return
@@ -208,10 +223,30 @@ def hub_sections(pc, accept, canon_name):
             if el.xpath('ancestor::*[contains(@class,"collapsible-block-unfolded-link")]'):
                 continue
             s = slug_of(el.get("href"))
+            if cur.get("skip"):
+                continue
             if s and s not in seen and accept(s):
                 seen.add(s)
                 cur["m"].append(s)
-    return [s for s in sections if s["m"]]
+    return [s for s in sections if s["m"] and not s.get("skip")]
+
+
+def tidy_sections(sections, arts):
+    """Many hubs give every article its own heading. A one-article section whose title is
+    really that article's name is folded back into the section before it."""
+    out = []
+    for sec in sections:
+        if len(sec["m"]) == 1 and sec["t"]:
+            m = arts[sec["m"][0]]
+            names = [norm(x) for x in (m.get("t"), m.get("n"), m["id"].replace("-", " ")) if x]
+            t = norm(sec["t"])
+            if any(n and (n in t or t in n) for n in names):
+                sec = {"t": "", "m": sec["m"]}
+        if out and not sec["t"]:
+            out[-1]["m"].extend(sec["m"])
+        else:
+            out.append({"t": sec["t"], "m": list(sec["m"])})
+    return out
 
 
 def pick_tag(hub_tags, tag_count, canon):
@@ -225,6 +260,17 @@ def pick_tag(hub_tags, tag_count, canon):
         return (overlap, tag_count.get(t, 0))
     best = max(cands, key=score)
     return best if score(best)[0] > 0 or len(cands) == 1 else None
+
+
+def guess_tag(canon, tag_count):
+    """When the hub page gives no usable tag, try the tag the canon's name would have."""
+    def slugify(t):
+        return re.sub(r"[^a-z0-9]+", "-", t.lower().replace("&", "and")).strip("-")
+    base = re.sub(r"-(hub|homescreen|home)$", "", canon["id"])
+    for t in (slugify(canon["t"]), slugify(re.sub(r"(?i)^the\s+", "", canon["t"])), base, base.replace("-hub", "")):
+        if t and tag_count.get(t, 0) >= 3:
+            return t
+    return None
 
 
 # ---------------------------------------------------------------- main
@@ -245,13 +291,13 @@ def main():
     for n, c in enumerate(canons, 1):
         got = src.page(c["id"])
         hub_tags = got[1] if got else []
-        tag = pick_tag(hub_tags, tag_count, c)
+        tag = pick_tag(hub_tags, tag_count, c) or guess_tag(c, tag_count)
         members = set(by_tag.get(tag, [])) if tag else None
 
         def accept(s):
             return s in arts and (members is None or s in members) and s != c["id"]
 
-        sections = hub_sections(got[0], accept, c["t"]) if got else []
+        sections = tidy_sections(hub_sections(got[0], accept, c["t"]), arts) if got else []
         listed = {s for sec in sections for s in sec["m"]}
         if members:
             rest = sorted((s for s in members if s not in listed and s in arts),
@@ -260,7 +306,8 @@ def main():
                 sections.append({"t": "More from this canon" if listed else "", "m": rest})
         total = sum(len(s["m"]) for s in sections)
         if total < 2:
-            print(f"[{n}/{len(canons)}] {c['t']}: skipped ({total} articles found)")
+            print(f"[{n}/{len(canons)}] {c['t']}: skipped ({total} articles found; hub page "
+                  f"{'read' if got else 'not read'}, {len(hub_tags)} tags, tag {tag})")
             continue
         if sections and not sections[0]["t"] and len(sections) > 1:
             sections[0]["t"] = "Start here"
