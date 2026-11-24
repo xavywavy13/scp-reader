@@ -32,6 +32,8 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main   # latest main, not the commit that triggered the run
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -56,5 +58,5 @@ jobs:
           git add -A data
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Weekly archive update"
-          git pull --rebase origin main
+          git pull --rebase -X theirs origin main   # keep this run's data files if another run committed meanwhile
           git push
