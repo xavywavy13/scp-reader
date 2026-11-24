@@ -186,6 +186,12 @@ def hub_sections(pc, accept, canon_name):
     def start(title):
         nonlocal cur
         title = WS.sub(" ", title or "").strip(" :–—-")
+        # "+ Show entries" style labels: keep only a real name, if there is one
+        title = re.sub(r"^[+»>\s]*", "", title)
+        title = re.sub(r"(?i)^(show|hide|open|close|expand|view|reveal|click to (show|open|expand))\b\s*", "", title)
+        title = re.sub(r"(?i)\s*\b(entries|block|list|more)\b\s*$", "", title).strip()
+        if title.lower() in ("", "all", "here", "contents"):
+            return
         if SKIP_SECTION.search(title):
             cur = {"t": title, "m": [], "skip": True}
             sections.append(cur)
