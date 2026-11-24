@@ -216,7 +216,12 @@ def hub_sections(pc, accept, canon_name):
         elif el.tag in ("h1", "h2", "h3", "h4") and not el.xpath("ancestor::a"):
             start(text(el))
         elif "collapsible-block-folded" in cls:
-            start(re.sub(r"^\+\s*", "", text(el)))
+            # "+ Show entries" style labels: keep only a real name, if there is one
+            label = re.sub(r"^[+»>\s]*", "", text(el))
+            label = re.sub(r"(?i)^(show|open|expand|view|reveal|click to (show|open|expand))\b\s*", "", label)
+            label = re.sub(r"(?i)\s*\b(entries|block|list|more)\b\s*$", "", label).strip()
+            if label and label.lower() not in ("all", "here", "contents"):
+                start(label)
         elif el.tag == "a":
             if el.xpath('ancestor::*[contains(@class,"breadcrumbs") or contains(@class,"footer-wikiwalk-nav") or contains(@class,"page-tags") or contains(@class,"licensebox") or contains(@class,"yui-nav")]'):
                 continue
