@@ -338,6 +338,14 @@ label.btn{cursor:pointer}
 .lb .lbcap{color:#d9dcdf;font:400 15px/1.45 var(--f-read);padding:12px max(18px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px) + 18px);max-height:30%;overflow:auto;text-align:center}
 .rend{margin-top:3em;padding-top:1.4em;border-top:1px solid var(--r-line);font-family:var(--f-ui);font-size:15px;display:grid;gap:14px}
 .rend .acts{display:flex;gap:8px;flex-wrap:wrap}
+.rhead .listen{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:7px 12px 7px 10px;border-radius:999px;background:var(--r-accent);color:var(--r-bg);font:700 13px var(--f-ui)}
+.rhead .listen svg{width:17px;height:17px}
+.rhead .listen small{font:500 11px var(--f-mono);opacity:.85}
+.recs{display:flex;flex-direction:column;border-top:1px solid var(--line);margin-top:4px}
+.recs a{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.recs a b{font-weight:700;flex:1;min-width:0}
+.recs a span{font:500 12px var(--f-mono);color:var(--muted);flex:0 0 auto}
+.recs a svg{width:18px;height:18px;color:var(--accent);flex:0 0 auto}
 .rend .acts button,.rend .acts a{flex:1 1 140px;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;border:1px solid var(--r-line);background:var(--r-soft);font-weight:700;text-decoration:none;color:var(--r-ink)}
 .rend .acts button.on{background:var(--r-accent);border-color:var(--r-accent);color:var(--r-bg)}
 .rend .acts svg{width:18px;height:18px}
@@ -481,6 +489,9 @@ const ICON = {
   canon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3.5l8.5 4.6-8.5 4.6-8.5-4.6z"/><path d="M3.5 12.4l8.5 4.6 8.5-4.6"/><path d="M3.5 16.4l8.5 4.6 8.5-4.6"/></svg>',
   dice2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
   cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9a4 4 0 0 1-.5 9.5z"/><path d="M12 10.5v6M9.5 14l2.5 2.5 2.5-2.5"/></svg>',
+  talk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M4 5.5h16v10H10l-4.5 3.5v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  headphones:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="14" width="4" height="6" rx="1.5"/><rect x="16.5" y="14" width="4" height="6" rx="1.5"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
   ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></svg>',
 };
 const ring = p => { const r=9, c=2*Math.PI*r; return `<svg class="ring" viewBox="0 0 22 22"><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.5"/><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 11 11)" stroke-linecap="round"/></svg>`; };
@@ -688,7 +699,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 15</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 16</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -1145,6 +1156,7 @@ function headerHTML(m){
   const eyebrow = m.k === "scp" ? `<span>${esc(seriesLabel(seriesKey(m.s)))}</span>${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}` : `<span>${m.k === "goi" ? "Group of Interest" : "Tale"}</span>`;
   return `<header class="rhead"><div class="eyebrow">${eyebrow}</div><h1>${esc(m.t)}</h1>${m.k==="scp"&&m.n?`<p class="nick">${esc(m.n)}</p>`:""}
     <div class="meta">${m.a?`<span>by <button data-author="${esc(m.a)}">${esc(m.a)}</button></span>`:""}<span>+${fmt(m.r)}</span><span>${mins(m)} min · ${fmt(m.w)} words</span>${m.d?`<span>${esc(m.d)}</span>`:""}</div>
+    <span class="listen-slot" data-for="${esc(m.id)}">${listenHTML(m)}</span>
     ${(CANON_OF.get(m.id) || []).length ? `<div class="canl">${CANON_OF.get(m.id).map(c => `<button data-canon="${esc(c.id)}">${ICON.canon}${esc(c.t)}</button>`).join("")}</div>` : ""}
     ${tags?`<div class="tagl">${tags}</div>`:""}</header>`;
 }
@@ -1152,7 +1164,7 @@ function endHTML(m){
   const [p, n] = neighbors(m);
   const cell = (x, dir) => x ? `<button data-id="${esc(x.id)}"><small>${dir}</small><b>${esc(x.t)}</b><span>${esc(x.k==="scp"?(x.n||"—"):(x.a||""))}</span></button>` : `<span></span>`;
   return `<footer class="rend">
-    <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
+    <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="${esc(discussUrl(m.id))}" target="_blank" rel="noopener">${ICON.talk}Discussion</a><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
     ${curSurprise ? `<button class="again" id="again">${ICON.dice2}Another surprise</button>` : ""}
     ${canonEndHTML(m)}
     ${rabbitHTML(m)}
@@ -1280,6 +1292,7 @@ RW.addEventListener("click", e => {
   if (a.getAttribute("href") === "#") { e.preventDefault(); return; }
   if (a.dataset.canon) return openCanon(a.dataset.canon, true);
   if (a.id === "rabbit") return goRabbit();
+  if (a.dataset.listen) return openListen(a.dataset.listen);
   if (a.id === "again") { const m2 = surprisePick(cur.id); if (!m2) return toast("Nothing else matches your filters"); persistProgress(); return openArticle(m2.id, {replace: true, surprise: true}); }
   if (a.dataset.mentions) { const t = BY.get(a.dataset.mentions); return openList("Mentioned in " + t.t, (BACK[t.id] || []).map(i => BY.get(i)).filter(Boolean), true); }
   if (a.dataset.id) return openArticle(a.dataset.id, {canon: a.dataset.cctx || null});
@@ -1541,6 +1554,41 @@ async function openOfflineManager(){
     <p class="note" style="margin-bottom:8px">Every file in the archive, for when you'll be offline for a long time. New files from the weekly update download when you open them.</p>
     <div class="offl" data-off="all:"></div>`, () => hydrateOffline());
 }
+/* ---------------- listen & discussion ---------------- */
+let AUDIO = {}, THREADS = {};
+async function loadExtras(){
+  const [a, t] = await Promise.all([fetchGz("data/audio.gz").catch(() => null), fetchGz("data/threads.gz").catch(() => null)]);
+  AUDIO = (a && a.a) || {}; THREADS = (t && t.t) || {};
+  if (cur && R.classList.contains("open")) {
+    const sl = RW.querySelector(`.listen-slot[data-for="${CSS.escape(cur.id)}"]`); if (sl) sl.innerHTML = listenHTML(cur);
+    RW.querySelectorAll(".rend .acts a").forEach(a2 => { if (/Discussion/.test(a2.textContent)) a2.href = discussUrl(cur.id); });
+  }
+}
+// the forum thread when we know it; otherwise the page with its comments
+const discussUrl = id => THREADS[id] ? `https://scp-wiki.wikidot.com/forum/t-${THREADS[id]}/${id}` : `https://scp-wiki.wikidot.com/${id}/comments/show`;
+function hostOf(u){
+  const h = (() => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } })();
+  if (/youtu\.?be/.test(h)) return "YouTube";
+  if (/soundcloud/.test(h)) return "SoundCloud";
+  if (/spotify/.test(h)) return "Spotify";
+  if (/scpdatapodcast/.test(h)) return "Podcast";
+  if (/apple\.com/.test(h)) return "Apple";
+  return h.split(".").slice(-2, -1)[0] || "Link";
+}
+function listenHTML(m){
+  const recs = AUDIO[m.id];
+  if (!recs || !recs.length) return "";
+  return recs.length === 1
+    ? `<a class="listen" href="${esc(recs[0][1])}" target="_blank" rel="noopener">${ICON.headphones}Listen<small>${esc(hostOf(recs[0][1]))}</small></a>`
+    : `<button class="listen" data-listen="${esc(m.id)}">${ICON.headphones}Listen<small>${recs.length} readings</small></button>`;
+}
+function openListen(id){
+  const m = BY.get(id), recs = AUDIO[id] || [];
+  openSheet(`<h4>Listen to ${esc(m.t)}</h4>
+    <p class="note">Audio adaptations listed on the wiki. They open in YouTube, SoundCloud or your podcast app.</p>
+    <div class="recs">${recs.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${ICON.play}<b>${esc(n)}</b><span>${esc(hostOf(u))}</span></a>`).join("")}</div>`);
+}
+
 /* ---------------- rabbit hole: a random file connected to this one ---------------- */
 let curFwd = [];
 const RABBIT_ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12.5"/><circle cx="16" cy="16" r="8.5"/><circle cx="16" cy="16" r="4.5"/><path d="M16 16l7-9"/></svg>';
@@ -1832,6 +1880,7 @@ async function boot(){
   render(); fitScreen();
   loadCanons();
   loadLinks();
+  loadExtras();
   if (!LS.get("bmPics", 0) && "caches" in window) setTimeout(async () => {
     for (const id of Object.keys(state.lib.bm)) await keepFileOffline(id);
     LS.set("bmPics", 1);

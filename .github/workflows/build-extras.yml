@@ -1,0 +1,56 @@
+name: Build audio and discussion links
+
+# Audio adaptations from the wiki's Audio Adaptations page, and each article's discussion
+# thread. Looking up threads is slow (one page per article), so it's resumable: each run
+# fills in what's missing until its time is up. The weekly update tops both up too.
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Minutes to spend looking up discussion threads"
+        default: "150"
+  push:
+    branches: [main]
+    paths:
+      - scripts/build_audio.py
+      - scripts/build_threads.py
+      - .github/workflows/build-extras.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # latest main, not the commit that triggered the run
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests lxml cssselect
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Audio adaptations
+        run: |
+          python scripts/build_audio.py
+          git add data/audio.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "Update audio adaptations"
+            git pull --rebase -X theirs origin main && git push
+          fi
+      - name: Discussion threads
+        run: |
+          python scripts/build_threads.py --minutes ${{ inputs.minutes || '150' }}
+          git add data/threads.gz
+          if ! git diff --cached --quiet; then
+            git commit -m "Update discussion links"
+            git pull --rebase -X theirs origin main && git push
+          fi

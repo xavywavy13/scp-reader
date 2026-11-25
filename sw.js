@@ -1,5 +1,5 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v15";
+const SHELL = "shell-v16";
 const DATA = "data-v3";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const IMG = "img-v1";        // pictures saved for offline reading (filled by the app, not here)
@@ -19,7 +19,7 @@ self.addEventListener("fetch", e => {
   // Article archive: cache first, it never changes within a data version.
   // The article list, canon list and 001-proposal chunk can be refreshed by GitHub Actions,
   // so check the network for those first and fall back to the saved copy offline.
-  if (url.origin === location.origin && /\/data\/(index\.gz|canons\.gz|links\.gz|c\/900\.gz)$/.test(url.pathname)) {
+  if (url.origin === location.origin && /\/data\/(index\.gz|canons\.gz|links\.gz|audio\.gz|threads\.gz|c\/900\.gz)$/.test(url.pathname)) {
     e.respondWith(fetch(req, {cache: "no-cache"}).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(DATA).then(c => c.put(req, copy)); }
       return res;

@@ -1,7 +1,8 @@
 name: Update archive
 
 # Every Monday: pull the latest SCP Wiki data, add new articles, refresh ratings and
-# details, pick up rewrites, then refresh the 001 proposals, canons and "Mentioned in".
+# details, pick up rewrites, then refresh the 001 proposals, canons, "Mentioned in",
+# audio adaptations and discussion threads.
 # Run it by hand from the Actions tab; tick "full" to rebuild every chunk from scratch.
 on:
   schedule:
@@ -51,6 +52,10 @@ jobs:
         run: python scripts/build_canons.py || echo "Canons not refreshed this time"
       - name: Build "Mentioned in"
         run: python scripts/build_links.py
+      - name: Audio adaptations
+        run: python scripts/build_audio.py || echo "Audio list not refreshed this time"
+      - name: New discussion threads
+        run: python scripts/build_threads.py --minutes 15 || echo "Threads not refreshed this time"
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
