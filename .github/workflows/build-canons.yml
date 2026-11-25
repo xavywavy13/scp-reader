@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: data-commit
+  group: canons-build
   cancel-in-progress: false
 
 jobs:
