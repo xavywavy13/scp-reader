@@ -356,7 +356,11 @@ def main():
         c.pop("hub", None)
         if tag0 and tag_count.get(tag0, 0) < 2:
             tag0 = None
-        tag = tag0 or pick_tag(hub_tags, tag_count, c) or guess_tag(c, tag_count)
+        # story series only use the tag the Series Archive names (or one spelled like the
+        # series); a hub's other tags are often broad ones like "horror" or "international"
+        tag = tag0 or guess_tag(c, tag_count) if is_series else (pick_tag(hub_tags, tag_count, c) or guess_tag(c, tag_count))
+        if is_series and tag and tag_count.get(tag, 0) > 400:
+            tag = None
         members = set(by_tag.get(tag, [])) if tag else None
 
         def accept(s):
