@@ -324,6 +324,36 @@ label.btn{cursor:pointer}
 .nav2 small{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-muted)}
 .nav2 b{font:700 18px/1.1 var(--f-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav2 span{font:400 13px/1.3 var(--f-read);color:var(--r-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* swipe hint */
+.swipe-hint{position:absolute;top:50%;z-index:4;max-width:62%;transform:translateY(-50%);padding:10px 14px;border-radius:14px;background:var(--r-ink);color:var(--r-bg);font:600 12px/1.3 var(--f-mono);letter-spacing:.04em;opacity:0;pointer-events:none;transition:opacity .15s}
+.swipe-hint b{display:block;font:700 18px/1.05 var(--f-display);letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swipe-hint.l{left:max(10px,env(safe-area-inset-left,0px))} .swipe-hint.r{right:max(10px,env(safe-area-inset-right,0px));text-align:right}
+.swipe-hint.on{opacity:.94}
+.rwrap{will-change:transform}
+/* find bar */
+.findbar{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;gap:4px;padding:calc(env(safe-area-inset-top,0px) + 6px) max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px));background:var(--r-bg);border-bottom:1px solid var(--r-line)}
+.findbar input{flex:1;min-width:0;font:inherit;font-size:17px;color:var(--r-ink);background:var(--r-soft);border:1px solid var(--r-line);border-radius:10px;padding:8px 10px;outline:none}
+.findbar output{font:500 12px var(--f-mono);color:var(--r-muted);min-width:4.2em;text-align:center;font-variant-numeric:tabular-nums}
+.findbar .iconbtn{color:var(--r-ink);width:38px}
+.findbar .done{font:700 15px var(--f-ui);color:var(--r-accent);padding:0 8px;height:40px}
+.rbody mark.hit{background:color-mix(in srgb,var(--r-accent) 22%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.rbody mark.hit.cur{background:var(--r-accent);color:var(--r-bg)}
+/* outline */
+.ol{display:flex;flex-direction:column;margin:0 -6px}
+.ol button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:11px 6px;border-radius:10px;font-size:16px;line-height:1.3}
+.ol button:active{background:var(--raise)}
+.ol button .lv{font:500 11px var(--f-mono);color:var(--faint);min-width:2.6em;font-variant-numeric:tabular-nums}
+.ol button.sub{padding-left:22px;font-size:15px;color:var(--muted)}
+.ol button.here{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.ol button.here .lv{color:var(--accent)}
+.olhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.olhead span{font:400 12px var(--f-mono);color:var(--muted)}
+/* rabbit hole */
+.rabbit{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border-radius:14px;border:1px dashed var(--r-accent);color:var(--r-ink)}
+.rabbit svg{width:30px;height:30px;flex:0 0 auto;color:var(--r-accent)}
+.rabbit b{display:block;font:700 19px/1.1 var(--f-display);text-transform:uppercase}
+.rabbit span{display:block;font:400 13px/1.35 var(--f-ui);color:var(--r-muted);margin-top:2px}
+.rabbit:active{transform:scale(.985)}
 .ment{display:grid;gap:4px}
 .ment h3{margin:0 0 4px;font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted);display:flex;justify-content:space-between;gap:12px}
 .ment .ml{display:flex;flex-direction:column;border-top:1px solid var(--r-line)}
@@ -383,10 +413,20 @@ label.btn{cursor:pointer}
   <div class="rbar">
     <button class="iconbtn" id="rBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="ttl" id="rTtl"></div>
+    <button class="iconbtn" id="rOl" aria-label="Outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="17.5" r="1.2" fill="currentColor" stroke="none"/></svg></button>
+    <button class="iconbtn" id="rFind" aria-label="Find in article"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/><path d="M8 10.5h5"/></svg></button>
     <button class="iconbtn" id="rAa" aria-label="Reading settings"><svg viewBox="0 0 24 24" fill="currentColor"><text x="1" y="19" font-family="Georgia,serif" font-size="13">A</text><text x="10" y="19" font-family="Georgia,serif" font-size="19">A</text></svg></button>
     <button class="iconbtn" id="rBm" aria-label="Bookmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg></button>
     <div class="prog" id="rProg"></div>
   </div>
+  <div class="findbar" id="findbar" hidden>
+    <input id="fq" type="search" placeholder="Find in this file" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Find in this file">
+    <output id="fcount" aria-live="polite"></output>
+    <button class="iconbtn" id="fprev" aria-label="Previous match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button class="iconbtn" id="fnext" aria-label="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button class="done" id="fdone">Done</button>
+  </div>
+  <div class="swipe-hint l" id="swL"></div><div class="swipe-hint r" id="swR"></div>
   <div class="rscroll" id="rScroll"><div class="rwrap" id="rWrap"></div></div>
 </section>
 
@@ -623,7 +663,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 12</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 13</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -894,7 +934,10 @@ document.querySelector('[data-close="listO"]').onclick = () => $("#listO").class
 let BACK = null;
 async function loadLinks(){
   try { const d = await fetchGz("data/links.gz"); BACK = d.b || {}; } catch (e) { BACK = null; }
-  if (cur && R.classList.contains("open")) { const el = RW.querySelector(".ment-slot"); if (el) el.outerHTML = mentionedHTML(cur); }
+  if (cur && R.classList.contains("open")) {
+    const el = RW.querySelector(".ment-slot"); if (el) el.outerHTML = mentionedHTML(cur);
+    const rb = RW.querySelector("#rabbit"); if (rb) rb.outerHTML = rabbitHTML(cur) || "";
+  }
 }
 function mentionedHTML(m){
   const ids = BACK && BACK[m.id] ? BACK[m.id].filter(id => BY.has(id)) : [];
@@ -1080,6 +1123,7 @@ function endHTML(m){
   return `<footer class="rend">
     <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
     ${canonEndHTML(m)}
+    ${rabbitHTML(m)}
     ${mentionedHTML(m)}
     ${p||n?`<div class="nav2">${cell(p,"‹ Previous")}${cell(n,"Next ›")}</div>`:""}
     <p class="lic">“${esc(m.k==="scp"?(m.n?m.t+" – "+m.n:m.t):m.t)}” by ${esc(m.a||"its authors")}, from the <a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">SCP Wiki</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Images load from the SCP Wiki.</p>
@@ -1092,6 +1136,7 @@ async function openArticle(id, opts = {}){
   if (cur && !opts.replace) { persistProgress(); stack.push({id: cur.id, canon: curCanon}); }
   cur = m; openedAt = Date.now();
   curCanon = opts.canon || null;
+  curFwd = []; closeFind(true);
   applyReaderSettings();
   R.classList.add("open"); R.classList.remove("hidebar", "scrolled");
   paintBehindReader();
@@ -1106,6 +1151,7 @@ async function openArticle(id, opts = {}){
     if (!(m.id in ch)) ch = await getChunk(m.ch, true);  // stale saved copy: fetch it again
     if (cur !== m) return;
     const html = ch[m.id] || "<p>This file is empty.</p>";
+    curFwd = [...new Set([...html.matchAll(/data-w="([^"]+)"/g)].map(x => x[1]))].filter(x => x !== m.id && BY.has(x));
     RW.innerHTML = headerHTML(m) + `<article class="rbody">${html}</article>` + endHTML(m);
     RW.querySelectorAll(".rbody a.img").forEach(a => {
       const img = document.createElement("img");
@@ -1116,6 +1162,7 @@ async function openArticle(id, opts = {}){
       a.replaceWith(img);
     });
     RW.querySelectorAll(".rbody table").forEach(t => { if (!t.parentElement.classList.contains("tw")) { const w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); } });
+    if (!LS.get("swipeTip", 0)) { const [a, b] = swipeTargets(m); if (a || b) setTimeout(() => { if (cur === m) { toast("Tip: swipe sideways for the next or previous file"); LS.set("swipeTip", 1); } }, 2600); }
     const p = progOf(id);
     if (p > 0.02 && p < 0.985 && !opts.top) { requestAnimationFrame(() => { RS.scrollTop = p * (RS.scrollHeight - RS.clientHeight); toast("Picked up where you left off"); }); }
   } catch (e) {
@@ -1149,6 +1196,7 @@ $("#rBm").onclick = () => {
 function closeReader(){
   persistProgress();
   if (stack.length) { const x = stack.pop(); cur = null; openArticle(x.id, {replace:true, canon:x.canon}); return; }
+  closeFind();
   R.classList.remove("open"); cur = null; document.documentElement.style.background = document.body.style.background = ""; refresh();
   if ($("#canonO").classList.contains("open")) renderCanon();
 }
@@ -1198,12 +1246,219 @@ RW.addEventListener("click", e => {
   }
   if (a.getAttribute("href") === "#") { e.preventDefault(); return; }
   if (a.dataset.canon) return openCanon(a.dataset.canon, true);
+  if (a.id === "rabbit") return goRabbit();
   if (a.dataset.mentions) { const t = BY.get(a.dataset.mentions); return openList("Mentioned in " + t.t, (BACK[t.id] || []).map(i => BY.get(i)).filter(Boolean), true); }
   if (a.dataset.id) return openArticle(a.dataset.id, {canon: a.dataset.cctx || null});
   if (a.dataset.author) { const au = a.dataset.author; return openList("By " + au, ALL.filter(m => m.a === au).sort((x,y)=>y.r-x.r), true); }
   if (a.dataset.tag) { const ti = +a.dataset.tag; return openList("#" + IDX.tags[ti], ALL.filter(m => m.g.includes(ti)).sort((x,y)=>y.r-x.r), true); }
   if (a.id === "mRead") return setRead(cur.id, !isRead(cur.id));
 });
+
+/* ---------------- rabbit hole: a random file connected to this one ---------------- */
+let curFwd = [];
+const RABBIT_ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12.5"/><circle cx="16" cy="16" r="8.5"/><circle cx="16" cy="16" r="4.5"/><path d="M16 16l7-9"/></svg>';
+function connections(m){
+  const back = BACK && BACK[m.id] ? BACK[m.id] : [];
+  const map = new Map();
+  for (const id of curFwd) map.set(id, "links");
+  for (const id of back) if (BY.has(id) && id !== m.id) map.set(id, map.has(id) ? "both" : "mentions");
+  return map;
+}
+function rabbitHTML(m){
+  const n = connections(m).size;
+  if (!n && BACK) return "";
+  return `<button class="rabbit" id="rabbit">${RABBIT_ICON}<div><b>Down the rabbit hole</b><span>${n ? `Jump to a random file connected to this one (${fmt(n)} to choose from)` : "Jump to a random file connected to this one"}</span></div></button>`;
+}
+function goRabbit(){
+  if (!cur) return;
+  const map = connections(cur);
+  if (!map.size) return toast("No connected files for this one");
+  const ids = [...map.keys()];
+  const unread = ids.filter(id => !isRead(id) && !stack.some(s => s.id === id));
+  const pool = unread.length ? unread : ids;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  const why = map.get(pick), from = cur.t;
+  openArticle(pick);
+  setTimeout(() => toast(why === "links" ? `${from} links to this` : why === "mentions" ? `This mentions ${from}` : `Linked both ways with ${from}`), 350);
+}
+
+/* ---------------- outline ---------------- */
+const KEY_RE = /^(addend(um|a)|appendix|description|special containment|containment procedures|interview|incident|experiment|exploration|test(ing)? log|test \d|document|recovery|discovery|history|update|transcript|log|note|summary|background|supplement|attachment|footnotes?|epilogue|prologue|part\b|chapter)/i;
+function outlineItems(){
+  const body = RW.querySelector(".rbody"); if (!body) return [];
+  const out = [];
+  const walker = body.querySelectorAll("h1,h2,h3,h4,h5,h6,p,summary,.tabbar .tab,.acs");
+  for (const el of walker) {
+    let label = "", sub = false;
+    if (/^H[1-6]$/.test(el.tagName)) label = el.textContent;
+    else if (el.tagName === "SUMMARY") { label = el.textContent; sub = true; }
+    else if (el.classList.contains("tab")) { label = el.textContent; sub = true; }
+    else if (el.classList.contains("acs")) label = "Classification";
+    else if (el.tagName === "P") {
+      const f = el.firstElementChild;
+      if (!f || !/^(STRONG|B)$/.test(f.tagName) || el.textContent.trim().indexOf(f.textContent.trim()) !== 0) continue;
+      const t = f.textContent.trim();
+      if (t.length > 70) continue;
+      // a bold label counts if it names a section ("Addendum 4:") or stands alone as a heading;
+      // speaker names in transcripts ("Dr. Clef: ...") don't
+      if (!KEY_RE.test(t) && !(t.endsWith(":") && el.textContent.trim().length <= t.length + 2)) continue;
+      label = t;
+      if (/^(item\s*#|object class|containment class|secondary class|disruption class|risk class|clearance|level)/i.test(label)) continue;
+    }
+    label = label.replace(/\s+/g, " ").replace(/[:\s]+$/, "").trim();
+    if (!label || label.length > 90) continue;
+    if (out.length && out[out.length - 1].label === label) continue;
+    out.push({label, el, sub});
+  }
+  return out;
+}
+function revealEl(el){
+  // open any collapsed section and switch to the tab that holds the element
+  for (let d = el.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) d.open = true;
+  const pane = el.closest(".pane");
+  if (pane && pane.hidden) {
+    const set = pane.closest(".tabset"), i = pane.dataset.i;
+    set.querySelectorAll(":scope > .tabbar .tab").forEach(t => t.classList.toggle("on", t.dataset.i === i));
+    set.querySelectorAll(":scope > .pane").forEach(p => p.hidden = p.dataset.i !== i);
+  }
+}
+function scrollToEl(el, center){
+  revealEl(el);
+  const top = el.getBoundingClientRect().top - RS.getBoundingClientRect().top + RS.scrollTop;
+  RS.scrollTop = Math.max(0, center ? top - RS.clientHeight / 2 + 20 : top - 76 - (parseFloat(getComputedStyle(RS).paddingTop) > 90 ? 0 : 0));
+}
+$("#rOl").onclick = () => {
+  const items = outlineItems();
+  const max = RS.scrollHeight - RS.clientHeight, f = max > 0 ? RS.scrollTop / max : 0;
+  const left = cur ? Math.max(0, Math.round(mins(cur) * (1 - f))) : 0;
+  const y = RS.getBoundingClientRect().top + 90;
+  let here = -1; items.forEach((it, i) => { const r = it.el.getBoundingClientRect(); if (r.top <= y && (r.width || r.height)) here = i; });
+  openSheet(`<div class="olhead"><h4>Outline</h4><span>${Math.round(f * 100)}% · ${left ? `about ${left} min left` : "almost done"}</span></div>
+    ${items.length ? `<div class="ol">${items.map((it, i) => `<button data-ol="${i}" class="${it.sub ? "sub" : ""}${i === here ? " here" : ""}"><span class="lv">${i === here ? "You" : String(i + 1).padStart(2, "0")}</span><span>${esc(it.label)}</span></button>`).join("")}</div>`
+      : `<p class="note">This file doesn't have sections to jump to.</p>`}
+    <div class="confirm"><button class="btn" id="olTop">Back to the top</button><button class="btn" id="olEnd">Jump to the end</button></div>`, () => {
+    $("#sheetB").querySelectorAll("[data-ol]").forEach(b => b.onclick = () => { closeSheet(); scrollToEl(items[+b.dataset.ol].el); });
+    $("#olTop").onclick = () => { closeSheet(); RS.scrollTop = 0; };
+    $("#olEnd").onclick = () => { closeSheet(); const e = RW.querySelector(".rend"); if (e) scrollToEl(e); };
+    const h = $("#sheetB").querySelector(".here"); if (h) h.scrollIntoView({block: "center"});
+  });
+};
+
+/* ---------------- find in article ---------------- */
+let hits = [], hitAt = -1, findT = null;
+function clearHits(){
+  RW.querySelectorAll("mark.hit").forEach(mk => { const t = document.createTextNode(mk.textContent); mk.replaceWith(t); });
+  RW.querySelector(".rbody")?.normalize();
+  hits = []; hitAt = -1;
+}
+function runFind(){
+  clearHits();
+  const q = $("#fq").value.trim();
+  const body = RW.querySelector(".rbody");
+  if (!body || q.length < 2) { $("#fcount").textContent = ""; return; }
+  const ql = q.toLowerCase(), nodes = [];
+  const tw = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {acceptNode: n => n.nodeValue.toLowerCase().includes(ql) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT});
+  while (tw.nextNode()) nodes.push(tw.currentNode);
+  for (const n of nodes) {
+    if (hits.length >= 500) break;
+    const text = n.nodeValue, lower = text.toLowerCase(), frag = document.createDocumentFragment();
+    let i = 0, j;
+    while ((j = lower.indexOf(ql, i)) !== -1 && hits.length < 500) {
+      frag.append(text.slice(i, j));
+      const mk = document.createElement("mark"); mk.className = "hit"; mk.textContent = text.slice(j, j + q.length);
+      frag.append(mk); hits.push(mk); i = j + q.length;
+    }
+    frag.append(text.slice(i));
+    n.replaceWith(frag);
+  }
+  if (!hits.length) { $("#fcount").textContent = "None"; return; }
+  // start at the first match below where you're reading
+  const y = RS.getBoundingClientRect().top + 80;
+  const k = hits.findIndex(mk => { revealEl(mk); return mk.getBoundingClientRect().top >= y; });
+  goHit(k < 0 ? 0 : k);
+}
+function goHit(i){
+  if (!hits.length) return;
+  hitAt = (i + hits.length) % hits.length;
+  hits.forEach((mk, x) => mk.classList.toggle("cur", x === hitAt));
+  scrollToEl(hits[hitAt], true);
+  $("#fcount").textContent = `${hitAt + 1}/${hits.length}${hits.length >= 500 ? "+" : ""}`;
+}
+function openFind(){
+  if (!RW.querySelector(".rbody")) return;
+  $("#findbar").hidden = false; R.classList.remove("hidebar");
+  const q = $("#fq"); q.focus(); q.select();
+}
+function closeFind(keepText){
+  if (!$("#findbar")) return;
+  $("#findbar").hidden = true; clearHits();
+  if (!keepText) $("#fcount").textContent = "";
+  $("#fq").blur();
+}
+$("#rFind").onclick = openFind;
+$("#fq").addEventListener("input", () => { clearTimeout(findT); findT = setTimeout(runFind, 220); });
+$("#fq").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); if (hits.length) goHit(hitAt + (e.shiftKey ? -1 : 1)); else runFind(); $("#fq").blur(); } if (e.key === "Escape") closeFind(); });
+$("#fnext").onclick = () => goHit(hitAt + 1);
+$("#fprev").onclick = () => goHit(hitAt - 1);
+$("#fdone").onclick = () => closeFind();
+
+/* ---------------- swipe between articles ---------------- */
+function swipeTargets(m){
+  const c = curCanon && CANON_BY.get(curCanon);
+  if (c && c.all.includes(m.id)) {
+    const i = c.all.indexOf(m.id);
+    return [c.all[i - 1] ? BY.get(c.all[i - 1]) : null, c.all[i + 1] ? BY.get(c.all[i + 1]) : null, c.t];
+  }
+  const [p, n] = neighbors(m);
+  return [p, n, m.k === "scp" ? seriesLabel(seriesKey(m.s)) : m.k === "goi" ? "Groups of Interest" : "Tales"];
+}
+(() => {
+  let sx = 0, sy = 0, dx = 0, mode = null, tg = null;
+  const L = $("#swL"), Rr = $("#swR");
+  const scrollsSideways = el => { for (; el && el !== RS; el = el.parentElement) if (el.scrollWidth > el.clientWidth + 2 && /(auto|scroll)/.test(getComputedStyle(el).overflowX)) return true; return false; };
+  const reset = (anim) => {
+    RW.style.transition = anim ? "transform .2s ease" : ""; RW.style.transform = "";
+    L.classList.remove("on"); Rr.classList.remove("on");
+    if (anim) setTimeout(() => { RW.style.transition = ""; }, 220);
+  };
+  RS.addEventListener("touchstart", e => {
+    mode = null; dx = 0;
+    if (e.touches.length !== 1 || !cur || !RW.querySelector(".rbody") || !$("#findbar").hidden) { mode = "off"; return; }
+    const t = e.touches[0]; sx = t.clientX; sy = t.clientY;
+    if (sx < 24 || sx > innerWidth - 24 || scrollsSideways(e.target)) { mode = "off"; return; }
+    tg = swipeTargets(cur);
+  }, {passive: true});
+  RS.addEventListener("touchmove", e => {
+    if (mode === "off" || e.touches.length !== 1) return;
+    const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
+    if (!mode) {
+      if (Math.abs(x) < 12 && Math.abs(y) < 12) return;
+      mode = Math.abs(x) > Math.abs(y) * 1.6 ? "x" : "off";
+      if (mode !== "x") return;
+    }
+    if (e.cancelable) e.preventDefault();
+    dx = x;
+    const target = dx < 0 ? tg[1] : tg[0];
+    const pull = target ? dx * 0.55 : dx * 0.18;
+    RW.style.transform = `translateX(${pull}px)`;
+    const hint = dx < 0 ? Rr : L, other = dx < 0 ? L : Rr;
+    other.classList.remove("on");
+    hint.innerHTML = target ? `${dx < 0 ? "Next" : "Previous"} in ${esc(tg[2])}<b>${esc(target.t)}</b>` : `No ${dx < 0 ? "next" : "previous"} file`;
+    hint.classList.toggle("on", Math.abs(dx) > 40);
+  }, {passive: false});
+  RS.addEventListener("touchend", () => {
+    if (mode !== "x") { mode = null; return; }
+    mode = null;
+    const target = dx < 0 ? tg[1] : tg[0];
+    if (target && Math.abs(dx) > 90) {
+      RW.style.transition = "transform .18s ease-in"; RW.style.transform = `translateX(${dx < 0 ? -110 : 110}%)`;
+      L.classList.remove("on"); Rr.classList.remove("on");
+      persistProgress();
+      setTimeout(() => { RW.style.transition = ""; RW.style.transform = ""; openArticle(target.id, {replace: true, canon: curCanon, top: false}); }, 170);
+    } else reset(true);
+  });
+  RS.addEventListener("touchcancel", () => { mode = null; reset(true); });
+})();
 
 /* link preview: tap an SCP link to see what it is before leaving the page */
 let pvId = null;
