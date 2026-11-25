@@ -48,9 +48,16 @@ jobs:
           fi
       - name: Discussion threads
         run: |
-          python scripts/build_threads.py --minutes ${{ inputs.minutes || '150' }}
-          git add data/threads.gz
-          if ! git diff --cached --quiet; then
-            git commit -m "Update discussion links"
-            git pull --rebase -X theirs origin main && git push
-          fi
+          # work in 20-minute rounds and publish after each, so links show up as they're found
+          total=${{ inputs.minutes || '150' }}
+          while [ "$total" -gt 0 ]; do
+            round=$(( total < 20 ? total : 20 ))
+            python scripts/build_threads.py --minutes $round
+            git add data/threads.gz
+            if ! git diff --cached --quiet; then
+              git commit -m "Update discussion links"
+              git pull --rebase -X theirs origin main && git push
+            fi
+            python scripts/build_threads.py --remaining || break
+            total=$(( total - round ))
+          done
