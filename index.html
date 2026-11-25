@@ -90,6 +90,28 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .quick button{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:700}
 .quick button svg{width:22px;height:22px;color:var(--accent)}
 .quick button:active{transform:scale(.97)}
+/* surprise me */
+.sf{display:grid;gap:4px}
+.sf .schips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px 2px}
+.sf .schips::-webkit-scrollbar{display:none}
+.sf .seg button{font-size:13px;padding:8px 4px}
+.sf .tog{margin:10px 0 0;justify-content:flex-start;color:var(--ink)}
+.sfgo{display:grid;gap:2px;justify-items:center;width:100%;margin-top:16px;padding:14px;border-radius:14px;background:var(--accent);color:var(--accent-ink)}
+.sfgo b{font:700 24px/1 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
+.sfgo span{font:500 12px var(--f-mono);opacity:.85}
+.sfgo:disabled{opacity:.45}
+.again{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:var(--r-accent);color:var(--r-bg);font-weight:700}
+.again svg{width:18px;height:18px}
+/* offline */
+.offl{min-height:44px}
+.offl .ob{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.offl .ob svg{width:20px;height:20px;flex:0 0 auto;color:var(--accent)}
+.offl .ob b{display:block;font-weight:700}
+.offl .ob small{display:block;font:400 12px var(--f-mono);color:var(--muted);margin-top:1px}
+.offl .ob .act{margin-left:auto;font:700 13px var(--f-ui);color:var(--accent);flex:0 0 auto}
+.offl .ob.saved svg{color:var(--c-safe)}
+.offl .bar{margin-top:6px}
+.offlist{display:grid;gap:8px}
 .daily{margin-top:12px;display:block;width:100%;text-align:left;padding:18px 16px;border-radius:16px;background:var(--ink);color:var(--bg);position:relative;overflow:hidden}
 .daily .lbl{font:500 11px var(--f-mono);letter-spacing:.14em;opacity:.7;text-transform:uppercase}
 .daily .t{font:700 34px/1 var(--f-display);text-transform:uppercase;margin-top:8px}
@@ -456,6 +478,8 @@ const ICON = {
   book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5.5c3-1 5.5-.8 8 1 2.5-1.8 5-2 8-1v13c-3-1-5.5-.8-8 1-2.5-1.8-5-2-8-1z"/><path d="M12 6.5v13"/></svg>',
   star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/></svg>',
   canon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3.5l8.5 4.6-8.5 4.6-8.5-4.6z"/><path d="M3.5 12.4l8.5 4.6 8.5-4.6"/><path d="M3.5 16.4l8.5 4.6 8.5-4.6"/></svg>',
+  dice2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9a4 4 0 0 1-.5 9.5z"/><path d="M12 10.5v6M9.5 14l2.5 2.5 2.5-2.5"/></svg>',
   ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></svg>',
 };
 const ring = p => { const r=9, c=2*Math.PI*r; return `<svg class="ring" viewBox="0 0 22 22"><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.5"/><circle cx="11" cy="11" r="${r}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 11 11)" stroke-linecap="round"/></svg>`; };
@@ -649,7 +673,7 @@ function renderHome(){
     <div class="quick">
       <button data-rand="scp">${ICON.dice}Random SCP</button>
       <button data-rand="tale">${ICON.book}Random tale</button>
-      <button data-rand="top">${ICON.star}Top unread</button>
+      <button data-surprise="1">${ICON.dice2}Surprise me</button>
     </div>
     ${pick ? `<button class="daily" data-id="${esc(pick.id)}"><div class="lbl">File of the day · ${new Date().toLocaleDateString("en-AU",{day:"numeric",month:"short"})}</div><div class="t">${esc(pick.t)}</div><div class="n">${esc(pick.n||"")}</div><div class="m">${esc(CLASS_LABEL(pick.c||"").toUpperCase())}${pick.c?" · ":""}+${fmt(pick.r)} · ${mins(pick)} min read</div></button>` : ""}
     <h2 class="sec">Series<span></span></h2>
@@ -663,7 +687,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 13</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 14</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -679,6 +703,7 @@ viewEl.addEventListener("click", e => {
   if (t.dataset.goto === "canons") { B.kind = "canon"; return go("browse"); }
   if (t.dataset.id && !t.classList.contains("row")) return openArticle(t.dataset.id);
   if (t.dataset.rand) return randomFrom(t.dataset.rand);
+  if (t.dataset.surprise) return openSurprise();
   if (t.dataset.series) { Object.assign(B, {kind:"scp", series:t.dataset.series, cls:"", sort:"num", tag:null}); return go("browse"); }
   if (t.dataset.kind) { Object.assign(B, {kind:t.dataset.kind, series:"", cls:"", sort:"rating", tag:null}); return go("browse"); }
   if (t.dataset.goto === "top") { Object.assign(B, {kind:"scp", series:"", cls:"", sort:"rating", tag:null}); B.hideRead = 1; return go("browse"); }
@@ -722,6 +747,7 @@ function renderBrowse(soft){
       <label class="tog"><input type="checkbox" id="hideRead"${state.set.hideRead?" checked":""}>Hide read</label>
     </div>
     <div class="count">${fmt(items.length)} files</div>
+    ${B.kind === "scp" && B.series ? `<div class="offl" data-off="series:${esc(B.series)}"></div>` : B.kind !== "scp" ? `<div class="offl" data-off="kind:${esc(B.kind)}"></div>` : ""}
     <div id="blist"></div>`;
   if (B.kind !== "scp" && B.sort === "num") items.sort((a,b) => a.t.localeCompare(b.t));
   lazyList($("#blist"), items);
@@ -738,6 +764,7 @@ function renderBrowse(soft){
     else { const row = ac.parentElement; row.scrollLeft = ac.offsetLeft - (row.clientWidth - ac.offsetWidth) / 2; }
   }
   if (soft) mainEl.scrollTop = keepTop;
+  hydrateOffline();
 }
 function renderCanonBrowse(soft, keepTop){
   const list = canonsSorted(B.csort || "yours");
@@ -833,13 +860,14 @@ function renderLibrary(){
     read: "Files get marked as finished when you reach the end, or when you tap Mark as read.",
   };
   viewEl.innerHTML = `
-    <header class="top"><h1 class="wordmark"><small>Personal file</small>Library</h1><div style="display:flex;gap:8px">${libSeg==="hist"&&seg.hist[1].length?`<button class="chip" id="clrH">Clear</button>`:""}<button class="chip" id="bkBtn">Backup</button></div></header>
+    <header class="top"><h1 class="wordmark"><small>Personal file</small>Library</h1><div style="display:flex;gap:8px">${libSeg==="hist"&&seg.hist[1].length?`<button class="chip" id="clrH">Clear</button>`:""}<button class="chip" id="offBtn">Offline</button><button class="chip" id="bkBtn">Backup</button></div></header>
     <div class="seg" role="group" aria-label="Library">${Object.entries(seg).map(([k,[l,a]]) => `<button data-l="${k}" aria-pressed="${libSeg===k}">${l}</button>`).join("")}</div>
     <div class="count">${fmt(seg[libSeg][1].length)} files</div>
     <div id="llist"></div>`;
   lazyList($("#llist"), seg[libSeg][1], `<div class="empty"><b>Nothing here yet</b>${empty[libSeg]}</div>`);
   viewEl.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { libSeg = b.dataset.l; render(); });
   $("#bkBtn").onclick = openBackup;
+  $("#offBtn").onclick = openOfflineManager;
   const c = $("#clrH"); if (c) c.onclick = () => openSheet(`<h4>Clear reading history?</h4><p style="margin:0;color:var(--muted)">Your saved files, places and finished marks stay. Only the list of opened files is removed.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doClr">Clear history</button></div>`, () => {
     $("#doClr").onclick = () => { state.hist = []; save("prog"); closeSheet(); render(); toast("History cleared"); };
   });
@@ -1032,12 +1060,14 @@ function renderCanon(top){
       <div class="cs">${fmt(s.n)} files · about ${hrs(s.hours)} · ${fmt(s.read)} read</div>
       <div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div>
       ${nm ? `<button class="cgo" data-id="${esc(nm.id)}"><small>${go}</small><b>${esc(nm.t)}</b>${nm.k === "scp" ? (nm.n ? `<span>${esc(nm.n)}</span>` : "") : (nm.a ? `<span>by ${esc(nm.a)}</span>` : "")}</button>` : ""}
+      <div class="offl" data-off="canon:${esc(c.id)}"></div>
     </div>
     <div class="ctl"><div class="seg" role="group" aria-label="Order" style="flex:1">${[["hub", "Hub order"], ["old", "Oldest"], ["rating", "Top rated"]].map(([k, l]) => `<button data-cs="${k}" aria-pressed="${canonSort === k}">${l}</button>`).join("")}</div></div>
     <div class="ctl"><span class="count" style="margin:0">${canonSort === "hub" ? "In the order the canon's hub lists them" : canonSort === "old" ? "In the order they were posted" : "Highest rated first"}</span><label class="tog"><input type="checkbox" id="cHide"${hide ? " checked" : ""}>Hide read</label></div>
     ${list}
     <p class="cwiki"><a href="https://scp-wiki.wikidot.com/${esc(c.id)}" target="_blank" rel="noopener">${ICON.ext}Open the canon hub on the wiki</a></p>`;
   body.scrollTop = keep;
+  hydrateOffline();
 }
 $("#canonB").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
@@ -1122,6 +1152,7 @@ function endHTML(m){
   const cell = (x, dir) => x ? `<button data-id="${esc(x.id)}"><small>${dir}</small><b>${esc(x.t)}</b><span>${esc(x.k==="scp"?(x.n||"—"):(x.a||""))}</span></button>` : `<span></span>`;
   return `<footer class="rend">
     <div class="acts"><button id="mRead" class="${isRead(m.id)?"on":""}">${ICON.check}<span>${isRead(m.id)?"Finished":"Mark as read"}</span></button><a href="https://scp-wiki.wikidot.com/${esc(m.id)}" target="_blank" rel="noopener">${ICON.ext}Open on the wiki</a></div>
+    ${curSurprise ? `<button class="again" id="again">${ICON.dice2}Another surprise</button>` : ""}
     ${canonEndHTML(m)}
     ${rabbitHTML(m)}
     ${mentionedHTML(m)}
@@ -1137,6 +1168,7 @@ async function openArticle(id, opts = {}){
   cur = m; openedAt = Date.now();
   curCanon = opts.canon || null;
   curFwd = []; closeFind(true);
+  curSurprise = !!opts.surprise;
   applyReaderSettings();
   R.classList.add("open"); R.classList.remove("hidebar", "scrolled");
   paintBehindReader();
@@ -1247,12 +1279,172 @@ RW.addEventListener("click", e => {
   if (a.getAttribute("href") === "#") { e.preventDefault(); return; }
   if (a.dataset.canon) return openCanon(a.dataset.canon, true);
   if (a.id === "rabbit") return goRabbit();
+  if (a.id === "again") { const m2 = surprisePick(cur.id); if (!m2) return toast("Nothing else matches your filters"); persistProgress(); return openArticle(m2.id, {replace: true, surprise: true}); }
   if (a.dataset.mentions) { const t = BY.get(a.dataset.mentions); return openList("Mentioned in " + t.t, (BACK[t.id] || []).map(i => BY.get(i)).filter(Boolean), true); }
   if (a.dataset.id) return openArticle(a.dataset.id, {canon: a.dataset.cctx || null});
   if (a.dataset.author) { const au = a.dataset.author; return openList("By " + au, ALL.filter(m => m.a === au).sort((x,y)=>y.r-x.r), true); }
   if (a.dataset.tag) { const ti = +a.dataset.tag; return openList("#" + IDX.tags[ti], ALL.filter(m => m.g.includes(ti)).sort((x,y)=>y.r-x.r), true); }
   if (a.id === "mRead") return setRead(cur.id, !isRead(cur.id));
 });
+
+/* ---------------- surprise me ---------------- */
+let curSurprise = false;
+const SDEF = {k: "scp", len: "any", c: "", s: "", r: 0, unread: 1};
+let SF = Object.assign({}, SDEF, LS.get("surprise", {}));
+const LENS = [["any", "Any length"], ["5", "Under 5 min"], ["10", "Under 10"], ["30", "10–30 min"], ["long", "30+ min"]];
+const MINR = [[0, "Any"], [50, "+50"], [100, "+100"], [250, "+250"], [500, "+500"], [1000, "+1,000"]];
+function lenOk(m, len){
+  const t = mins(m);
+  return len === "any" || (len === "5" && t <= 5) || (len === "10" && t <= 10) || (len === "30" && t > 10 && t <= 30) || (len === "long" && t > 30);
+}
+function surprisePool(f = SF){
+  return ALL.filter(m => (f.k === "any" || m.k === f.k) && lenOk(m, f.len) && m.r >= f.r && (!f.unread || !isRead(m.id))
+    && (f.k !== "scp" || ((!f.c || m.c === f.c) && (!f.s || seriesKey(m.s) === f.s))));
+}
+function surprisePick(not){
+  const pool = surprisePool().filter(m => m.id !== not);
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+function openSurprise(){
+  const draw = () => {
+    const n = surprisePool().length, scp = SF.k === "scp";
+    const ser = seriesStats().map(([k]) => k);
+    $("#sheetB").innerHTML = `<div class="sf">
+      <h4>Surprise me with</h4>
+      <div class="seg">${[["scp", "SCPs"], ["tale", "Tales"], ["goi", "GoI"], ["any", "Anything"]].map(([k, l]) => `<button data-sk="${k}" aria-pressed="${SF.k === k}">${l}</button>`).join("")}</div>
+      <h4>Length</h4>
+      <div class="schips">${LENS.map(([k, l]) => `<button class="chip" data-sl="${k}" aria-pressed="${SF.len === k}">${l}</button>`).join("")}</div>
+      ${scp ? `<h4>Object class</h4>
+      <div class="schips"><button class="chip" data-sc="" aria-pressed="${!SF.c}">Any class</button>${CLASSES.map(c => `<button class="chip" data-sc="${c}" aria-pressed="${SF.c === c}"><span class="cls" data-c="${c}">${esc(CLASS_LABEL(c))}</span></button>`).join("")}</div>
+      <h4>Series</h4>
+      <div class="schips"><button class="chip" data-ss="" aria-pressed="${!SF.s}">Any series</button>${ser.map(k => `<button class="chip" data-ss="${esc(k)}" aria-pressed="${SF.s === k}">${esc(seriesLabel(k))}</button>`).join("")}</div>` : ""}
+      <h4>Minimum rating</h4>
+      <div class="seg">${MINR.map(([v, l]) => `<button data-sr="${v}" aria-pressed="${SF.r === v}">${l}</button>`).join("")}</div>
+      <label class="tog"><input type="checkbox" id="sfUnread"${SF.unread ? " checked" : ""}>Only files I haven't read</label>
+      <button class="sfgo" id="sfGo"${n ? "" : " disabled"}><b>${n ? "Surprise me" : "Nothing matches"}</b><span>${n ? `${fmt(n)} files match` : "Loosen a filter"}</span></button>
+      ${JSON.stringify(SF) !== JSON.stringify(SDEF) ? `<div class="confirm" style="margin-top:6px"><button class="btn" id="sfReset">Reset filters</button></div>` : ""}
+    </div>`;
+    const set = (k, v) => { SF[k] = v; LS.set("surprise", SF); const sc = $("#sheet").scrollTop; draw(); $("#sheet").scrollTop = sc; };
+    const B2 = $("#sheetB");
+    B2.querySelectorAll("[data-sk]").forEach(b => b.onclick = () => set("k", b.dataset.sk));
+    B2.querySelectorAll("[data-sl]").forEach(b => b.onclick = () => set("len", b.dataset.sl));
+    B2.querySelectorAll("[data-sc]").forEach(b => b.onclick = () => set("c", b.dataset.sc));
+    B2.querySelectorAll("[data-ss]").forEach(b => b.onclick = () => set("s", b.dataset.ss));
+    B2.querySelectorAll("[data-sr]").forEach(b => b.onclick = () => set("r", +b.dataset.sr));
+    $("#sfUnread").onchange = e => set("unread", e.target.checked ? 1 : 0);
+    const rs = $("#sfReset"); if (rs) rs.onclick = () => { SF = Object.assign({}, SDEF); LS.set("surprise", SF); draw(); };
+    $("#sfGo").onclick = () => { const m = surprisePick(); if (!m) return; closeSheet(); openArticle(m.id, {surprise: true}); };
+    B2.querySelectorAll(".schips [aria-pressed=true]").forEach(b => { const row = b.parentElement; row.scrollLeft = b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2; });
+  };
+  openSheet("", draw);
+}
+
+/* ---------------- download for offline ---------------- */
+const DATA_CACHE = "data-v3";   // must match DATA in sw.js
+const offJobs = new Map();
+const chunkHref = n => new URL(chunkUrl(n), location.href).href;
+function collection(key){
+  const [kind, val] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)];
+  if (kind === "series") return {label: seriesLabel(val), ids: ALL.filter(m => m.k === "scp" && seriesKey(m.s) === val).map(m => m.id)};
+  if (kind === "kind") return {label: val === "tale" ? "All tales" : "All Groups of Interest", ids: ALL.filter(m => m.k === val).map(m => m.id)};
+  if (kind === "canon") { const c = CANON_BY.get(val); return c ? {label: c.t, ids: c.all} : {label: "Canon", ids: []}; }
+  return {label: "Everything", ids: ALL.map(m => m.id)};
+}
+const chunksOf = ids => [...new Set(ids.map(id => BY.get(id)).filter(Boolean).map(m => m.ch))];
+const estMB = chs => Math.max(1, Math.round(chs.length * 0.55));
+async function cachedCount(chs){
+  if (!("caches" in window)) return 0;
+  const c = await caches.open(DATA_CACHE);
+  const have = new Set((await c.keys()).map(r => r.url));
+  return chs.filter(n => have.has(chunkHref(n))).length;
+}
+async function downloadOffline(key){
+  if (!("caches" in window)) return toast("This browser can't save files for offline reading");
+  if (offJobs.has(key)) return;
+  const col = collection(key), chs = chunksOf(col.ids);
+  const job = {done: 0, total: chs.length, failed: 0, stop: false};
+  offJobs.set(key, job); hydrateOffline(key);
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  const cache = await caches.open(DATA_CACHE);
+  const have = new Set((await cache.keys()).map(r => r.url));
+  const queue = [...chs];
+  const worker = async () => {
+    while (queue.length && !job.stop) {
+      const url = chunkHref(queue.shift());
+      try {
+        if (!have.has(url)) {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(res.status);
+          if (!navigator.serviceWorker || !navigator.serviceWorker.controller) await cache.put(url, res.clone());
+          await res.arrayBuffer();
+        }
+        job.done++;
+      } catch { job.failed++; }
+      hydrateOffline(key);
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  offJobs.delete(key);
+  if (!job.stop && !job.failed) {
+    const saved = LS.get("offline", {}); saved[key] = {label: col.label, ts: Date.now()}; LS.set("offline", saved);
+    toast(`${col.label} is saved for offline reading`);
+  } else if (job.failed) toast(`${job.failed} part${job.failed > 1 ? "s" : ""} didn't download. Tap Download again when you have a better connection.`);
+  hydrateOffline();
+}
+async function removeOffline(key){
+  const saved = LS.get("offline", {}); delete saved[key]; LS.set("offline", saved);
+  const keep = new Set(Object.keys(saved).flatMap(k => chunksOf(collection(k).ids)));
+  const drop = new Set(chunksOf(collection(key).ids).filter(n => !keep.has(n)).map(n => `/data/c/${String(n).padStart(3, "0")}.gz`));
+  if ("caches" in window) {
+    const c = await caches.open(DATA_CACHE);
+    for (const r of await c.keys()) if (drop.has(new URL(r.url).pathname.replace(/^.*(\/data\/)/, "/data/"))) await c.delete(r);
+  }
+  toast(`Removed ${collection(key).label} from this phone`);
+  hydrateOffline();
+}
+async function hydrateOffline(only){
+  for (const el of document.querySelectorAll(".offl[data-off]")) {
+    const key = el.dataset.off; if (only && key !== only) continue;
+    const col = collection(key), chs = chunksOf(col.ids);
+    if (!chs.length) { el.innerHTML = ""; continue; }
+    const job = offJobs.get(key);
+    if (job) {
+      el.innerHTML = `<button class="ob" data-offstop="${esc(key)}">${ICON.cloud}<span><b>Downloading ${esc(col.label)}</b><small>${job.done} of ${job.total} parts</small></span><span class="act">Stop</span></button><div class="bar"><i style="width:${(job.done / job.total * 100).toFixed(1)}%"></i></div>`;
+      continue;
+    }
+    const have = await cachedCount(chs);
+    const saved = !!LS.get("offline", {})[key];
+    if (have === chs.length && (saved || key !== "all:")) {
+      el.innerHTML = `<button class="ob saved" data-offrm="${esc(key)}">${ICON.check}<span><b>Saved for offline</b><small>${fmt(col.ids.length)} files · about ${estMB(chs)} MB</small></span><span class="act">Remove</span></button>`;
+    } else {
+      const left = chs.length - have;
+      el.innerHTML = `<button class="ob" data-offdl="${esc(key)}">${ICON.cloud}<span><b>${key === "all:" ? "Download every file" : `Download ${key.startsWith("canon:") ? "this canon" : esc(col.label)} for offline`}</b><small>${fmt(col.ids.length)} files · about ${estMB(have ? chs.slice(0, left) : chs)} MB${have ? ` left to download` : ""}</small></span><span class="act">Download</span></button>`;
+    }
+  }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-offdl],[data-offrm],[data-offstop]"); if (!b) return;
+  e.stopPropagation();
+  if (b.dataset.offdl) downloadOffline(b.dataset.offdl);
+  else if (b.dataset.offstop) { const j = offJobs.get(b.dataset.offstop); if (j) j.stop = true; }
+  else if (b.dataset.offrm) {
+    const key = b.dataset.offrm, col = collection(key);
+    openSheet(`<h4>Remove ${esc(col.label)}?</h4><p class="note">Its files will need a connection again. Anything in your Library stays as it is.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doRm">Remove</button></div>`,
+      () => { $("#doRm").onclick = () => { closeSheet(); removeOffline(key); }; });
+  }
+}, true);
+async function openOfflineManager(){
+  const saved = LS.get("offline", {});
+  let used = "";
+  try { const est = await navigator.storage.estimate(); used = `The app is using about ${Math.round((est.usage || 0) / 1e6)} MB on this phone.`; } catch {}
+  const keys = Object.keys(saved).filter(k => k !== "all:");
+  openSheet(`<h4>Saved for offline</h4>
+    ${keys.length ? `<div class="offlist">${keys.map(k => `<div class="offl" data-off="${esc(k)}"></div>`).join("")}</div>` : `<p class="note">Nothing saved yet. Download a whole series from <b>Archive</b>, or a canon from its page.</p>`}
+    <h4>Everything</h4>
+    <p class="note" style="margin-bottom:8px">Every file in the archive, for when you'll be offline for a long time. New files from the weekly update download when you open them.</p>
+    <div class="offl" data-off="all:"></div>
+    ${used ? `<p class="note" style="margin-top:12px">${used}</p>` : ""}`, () => hydrateOffline());
+}
 
 /* ---------------- rabbit hole: a random file connected to this one ---------------- */
 let curFwd = [];
