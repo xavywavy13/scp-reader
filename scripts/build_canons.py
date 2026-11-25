@@ -159,7 +159,7 @@ def canon_list(src):
             by = snip[0].xpath('.//div[contains(@class,"source")]//span[contains(@class,"printuser")]')
             if by and qsrc:
                 qsrc["a"] = text(by[-1])
-        img = next((("https:" + i if i.startswith("//") else i) for i in el.xpath(".//img/@src")), None)
+        img = next((g for g in (good_img(i) for i in el.xpath('.//img[not(ancestor::*[contains(@class,"printuser")])]/@src')) if g), None)
         out.append({"id": slug, "t": text(h[0]), "d": clean_desc(" ".join(p for p in paras if p)), "img": img,
                     "q": quote[:600], "qs": qsrc, "un": unmaintained})
     return out
@@ -198,6 +198,16 @@ def hub_intro(pc, name):
             break
     text_ = " ".join(out)
     return (text_[:420].rsplit(" ", 1)[0] + "…") if len(text_) > 420 else text_
+
+
+BAD_IMG = re.compile(r"(?i)(avatar|karma|userinfo|user:info|icon|favicon|blank\.png|spacer|pixel|\.gif$)")
+
+
+def good_img(src):
+    if not src:
+        return None
+    src = "https:" + src if src.startswith("//") else src
+    return src if src.startswith("http") and not BAD_IMG.search(src) else None
 
 
 def hub_image(pc):
@@ -250,7 +260,7 @@ def series_list(src):
             if not name or key in seen:
                 continue
             seen.add(key)
-            img = next((("https:" + i if i.startswith("//") else i) for i in blk.xpath(".//img/@src")), None)
+            img = next((g for g in (good_img(i) for i in blk.xpath('.//img[not(ancestor::*[contains(@class,"printuser") or contains(@class,"footer")])]/@src')) if g), None)
             out.append({"id": slug or key, "t": name, "d": clean_desc(blurb), "img": img, "q": "", "qs": None, "un": False,
                         "type": "series", "done": "_complete" in cls, "hub": bool(slug), "tag0": tag})
     return out
