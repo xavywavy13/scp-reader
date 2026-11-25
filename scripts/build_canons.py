@@ -159,9 +159,57 @@ def canon_list(src):
             by = snip[0].xpath('.//div[contains(@class,"source")]//span[contains(@class,"printuser")]')
             if by and qsrc:
                 qsrc["a"] = text(by[-1])
-        out.append({"id": slug, "t": text(h[0]), "d": " ".join(p for p in paras if p),
+        img = next((("https:" + i if i.startswith("//") else i) for i in el.xpath(".//img/@src")), None)
+        out.append({"id": slug, "t": text(h[0]), "d": clean_desc(" ".join(p for p in paras if p)), "img": img,
                     "q": quote[:600], "qs": qsrc, "un": unmaintained})
     return out
+
+
+CREDIT = re.compile(r"(?i)\b(filename|file name|license|licen[cs]ed under|source link|derivative of|image credit|cc by-sa|cc-by-sa|public domain)\b")
+SKIP_INTRO = re.compile(r"(?i)^(welcome to|this (page|hub) (is|contains|lists)|note:|warning:|content warning|cw:|last updated|see also|return to|back to)")
+
+
+def clean_desc(t):
+    """Drop image-credit text that some hubs put where the blurb goes."""
+    t = WS.sub(" ", t or "").strip()
+    m = CREDIT.search(t)
+    if m:
+        t = t[:m.start()].strip(" -–—:|")
+    if re.search(r"(?i)a blurb should go here", t) or len(t) < 25:
+        return ""
+    return t[:500]
+
+
+def hub_intro(pc, name):
+    """The hub's own introduction: its first real paragraphs of prose."""
+    out = []
+    for p in pc.xpath(".//p"):
+        if p.xpath('ancestor::*[contains(@class,"licensebox") or contains(@class,"footnotes") or contains(@class,"collapsible-block") '
+                   'or contains(@class,"footer") or contains(@class,"credit") or contains(@class,"yui-nav") or self::table or self::blockquote]'):
+            continue
+        t = WS.sub(" ", p.text_content()).strip()
+        if len(t) < 60 or CREDIT.search(t) or SKIP_INTRO.search(t) or t.lower().startswith(name.lower()):
+            continue
+        links = len(p.xpath(".//a"))
+        if links > 3 and links * 25 > len(t) / 2:       # a list of links, not prose
+            continue
+        out.append(t)
+        if sum(len(x) for x in out) > 220:
+            break
+    text_ = " ".join(out)
+    return (text_[:420].rsplit(" ", 1)[0] + "…") if len(text_) > 420 else text_
+
+
+def hub_image(pc):
+    for img in pc.xpath(".//img[@src]"):
+        if img.xpath('ancestor::*[contains(@class,"licensebox") or contains(@class,"footer") or contains(@class,"printuser")]'):
+            continue
+        src = img.get("src")
+        if src.startswith("//"):
+            src = "https:" + src
+        if src.startswith("http") and not re.search(r"(?i)(avatar|karma|userinfo|icon|favicon|\.gif$)", src):
+            return src
+    return None
 
 
 def clean_series_name(t):
@@ -202,7 +250,8 @@ def series_list(src):
             if not name or key in seen:
                 continue
             seen.add(key)
-            out.append({"id": slug or key, "t": name, "d": blurb[:500], "q": "", "qs": None, "un": False,
+            img = next((("https:" + i if i.startswith("//") else i) for i in blk.xpath(".//img/@src")), None)
+            out.append({"id": slug or key, "t": name, "d": clean_desc(blurb), "img": img, "q": "", "qs": None, "un": False,
                         "type": "series", "done": "_complete" in cls, "hub": bool(slug), "tag0": tag})
     return out
 
@@ -382,6 +431,13 @@ def main():
             sections[0]["t"] = "Start here"
         if c["qs"] and c["qs"].get("id") not in arts:
             c["qs"]["id"] = None
+        if got:
+            if not c.get("d"):
+                c["d"] = hub_intro(got[0], c["t"])
+            if not c.get("img"):
+                c["img"] = hub_image(got[0])
+        if not c.get("img"):
+            c.pop("img", None)
         out.append({**c, "tag": tag, "s": sections, "n": total})
         print(f"[{n}/{len(everything)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
 

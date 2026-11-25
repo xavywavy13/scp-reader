@@ -1,5 +1,5 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v18";
+const SHELL = "shell-v19";
 const DATA = "data-v3";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
 const IMG = "img-v1";        // pictures saved for offline reading (filled by the app, not here)

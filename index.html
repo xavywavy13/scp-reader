@@ -23,7 +23,7 @@
    and a full-screen reader sheet that slides over everything. */
 :root{
   --bg:#eceef1; --surface:#ffffff; --raise:#f6f7f9; --ink:#15181c; --muted:#5b636d; --faint:#8a929c;
-  --line:#d6dae0; --accent:#9b1c2e; --accent-ink:#ffffff; --accent-soft:#f3e3e5;
+  --line:#d6dae0; --accent:#9b1c2e; --accent-ink:#ffffff; --accent-soft:#f3e3e5; --em-l:88%; --em-s:38%; --em-fg:28%;
   --c-safe:#2f7d4f; --c-euclid:#b07a12; --c-keter:#b3261e; --c-thaumiel:#4b3a8f; --c-apollyon:#5c0f1a;
   --c-neutral:#6a737d; --c-explained:#1f7a80; --c-esoteric:#2c5aa0;
   --f-display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
@@ -36,14 +36,14 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1114; --surface:#161a1f; --raise:#1c2127; --ink:#e5e8eb; --muted:#9aa3ad; --faint:#6c757f;
-  --line:#272d34; --accent:#e2576b; --accent-ink:#1a0a0d; --accent-soft:#3a1c22;
+  --line:#272d34; --accent:#e2576b; --accent-ink:#1a0a0d; --accent-soft:#3a1c22; --em-l:24%; --em-s:30%; --em-fg:82%;
   --c-safe:#5cc287; --c-euclid:#e0aa3e; --c-keter:#f06a5f; --c-thaumiel:#a493f0; --c-apollyon:#ff7d8e;
   --c-neutral:#9aa3ad; --c-explained:#4cc3c9; --c-esoteric:#7aa7f0;
   --r-bg:#121518; --r-ink:#d8dce0; --r-muted:#8f98a2; --r-line:#2a3037; --r-accent:#ea7080; --r-soft:#1b1f24;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1114; --surface:#161a1f; --raise:#1c2127; --ink:#e5e8eb; --muted:#9aa3ad; --faint:#6c757f;
-  --line:#272d34; --accent:#e2576b; --accent-ink:#1a0a0d; --accent-soft:#3a1c22;
+  --line:#272d34; --accent:#e2576b; --accent-ink:#1a0a0d; --accent-soft:#3a1c22; --em-l:24%; --em-s:30%; --em-fg:82%;
   --c-safe:#5cc287; --c-euclid:#e0aa3e; --c-keter:#f06a5f; --c-thaumiel:#a493f0; --c-apollyon:#ff7d8e;
   --c-neutral:#9aa3ad; --c-explained:#4cc3c9; --c-esoteric:#7aa7f0;
   --r-bg:#121518; --r-ink:#d8dce0; --r-muted:#8f98a2; --r-line:#2a3037; --r-accent:#ea7080; --r-soft:#1b1f24;
@@ -141,6 +141,20 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .ccard.wide{flex:none;width:100%}
 .ccard:active{transform:scale(.985)}
 .ccard .k{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.ctop{display:flex;gap:12px;align-items:center;min-width:0}
+.ctop > span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.em{flex:0 0 auto;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;overflow:hidden;position:relative;
+  background:hsl(var(--h) var(--em-s) var(--em-l));color:hsl(var(--h) 45% var(--em-fg));font:700 21px/1 var(--f-display);letter-spacing:.02em;text-transform:uppercase}
+.em::after{content:"";position:absolute;inset:5px;border:1.5px solid currentColor;opacity:.28;border-radius:8px}
+.em.series{border-radius:50%}
+.em.series::after{border-radius:50%}
+.em img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface);z-index:1;opacity:0;transition:opacity .2s}
+.em img.ok{opacity:1}
+.em.big{width:84px;height:84px;font-size:34px;border-radius:18px}
+.em.big::after{inset:7px;border-radius:12px}
+.em.big.series{border-radius:50%}
+.ccard .by,.chero .by{font:400 13px/1.35 var(--f-ui);color:var(--muted)}
+.chero .by b{color:var(--ink);font-weight:700}
 .ccard .t{font:700 24px/1 var(--f-display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
 .ccard .d{font:400 15px/1.4 var(--f-read);color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:4.2em}
 .ccard .m{font:400 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:auto;padding-top:4px}
@@ -730,7 +744,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 18</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 19</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -1064,9 +1078,29 @@ function canonsSorted(mode, type){
   else list.sort((a, b) => (b[1].last - a[1].last) || (a[0].un - b[0].un) || (b[1].n - a[1].n));
   return list.map(x => x[0]);
 }
+// an emblem for each canon or series: its hub picture if it has one, else its initials on a colour from its name
+function emblemHTML(c, big){
+  let hsh = 0; for (const ch of c.t) hsh = (hsh * 31 + ch.codePointAt(0)) >>> 0;
+  const words = c.t.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(w => w && !/^(the|a|an|of|and|in|on|to|for)$/i.test(w));
+  const ini = (words.length > 1 ? [...words[0]][0] + [...words[1]][0] : [...(words[0] || c.t)].slice(0, 2).join("")) || "?";
+  return `<span class="em${isSeries(c) ? " series" : ""}${big ? " big" : ""}" style="--h:${hsh % 360}" aria-hidden="true">${esc(ini)}${c.img ? `<img class="emimg" src="${esc(c.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span>`;
+}
+// who wrote it: the most frequent authors among its files
+function authorsOf(c, max = 2){
+  const n = new Map();
+  for (const id of c.all) { const a = (BY.get(id) || {}).a; if (a && !/^anonymous\b/i.test(a)) n.set(a, (n.get(a) || 0) + 1); }
+  const top = [...n.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]);
+  if (!top.length) return "";
+  const names = top.slice(0, max), rest = top.length - names.length;
+  if (rest > 0) return names.join(", ") + ` and ${rest} other${rest > 1 ? "s" : ""}`;
+  return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1] : names[0];
+}
+// show a hub picture only once it has loaded; until then (or if it fails) the initials show
+document.addEventListener("error", e => { if (e.target.classList && e.target.classList.contains("emimg")) e.target.remove(); }, true);
+document.addEventListener("load", e => { if (e.target.classList && e.target.classList.contains("emimg")) e.target.classList.add("ok"); }, true);
 function canonCardHTML(c, wide){
   const s = canonStats(c);
-  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">${isSeries(c) ? "Series" : "Canon"} · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}${c.done ? " · complete" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`} · avg ${s.avg >= 0 ? "+" : ""}${fmt(s.avg)}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
+  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="ctop">${emblemHTML(c)}<span><span class="k">${isSeries(c) ? "Series" : "Canon"} · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}${c.done ? " · complete" : ""}</span><span class="t">${esc(c.t)}</span></span></span><span class="${c.d ? "d" : "d by"}">${c.d ? esc(c.d) : `Stories by ${esc(authorsOf(c, 3))}.`}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`} · avg ${s.avg >= 0 ? "+" : ""}${fmt(s.avg)}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
 }
 function canonRow(m, n){
   const h = rowHTML(m);
@@ -1103,8 +1137,10 @@ function renderCanon(top){
   if (!list) list = `<div class="empty"><b>All read</b>Turn off Hide read to see the whole ${kindWord(c)} again.</div>`;
   const qs = c.qs;
   body.innerHTML = `<div class="chero">
+      ${emblemHTML(c, true)}
       <div class="ck">${isSeries(c) ? "Story series" : "Canon"}${c.un ? ` · <span>unmaintained</span>` : ""}${c.done ? ` · <span>complete</span>` : ""}</div>
       <h2 class="ct">${esc(c.t)}</h2>
+      ${authorsOf(c) ? `<div class="by">By <b>${esc(authorsOf(c, 3))}</b></div>` : ""}
       ${c.d ? `<p class="cd">${esc(c.d)}</p>` : ""}
       ${c.q ? `<blockquote class="cq"><p>${esc(c.q)}</p>${qs ? `<footer>From ${qs.id && BY.has(qs.id) ? `<button data-id="${esc(qs.id)}">${esc(qs.t)}</button>` : esc(qs.t)}${qs.a ? ` by ${esc(qs.a)}` : ""}</footer>` : ""}</blockquote>` : ""}
       <div class="cs">${fmt(s.n)} files · about ${hrs(s.hours)} · ${fmt(s.read)} read</div>
