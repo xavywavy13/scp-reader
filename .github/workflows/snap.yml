@@ -27,8 +27,14 @@ jobs:
                   await b.close()
           asyncio.run(main())
           PY
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: shots
-          path: shots
+      - name: Hand the screenshots over on a temporary branch
+        if: always()
+        run: |
+          cd shots
+          git init -q -b tmp-snaps
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "screenshots"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" tmp-snaps
+permissions:
+  contents: write
