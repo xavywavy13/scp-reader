@@ -5,10 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "== comments/show"
-          curl -sS -o /tmp/cs.html -D - "https://scp-wiki.wikidot.com/scp-173/comments/show" | grep -iE "^HTTP|^location"
-          grep -o 'forum/t-[0-9]*[^"]*' /tmp/cs.html | head -3
-          grep -o 'id="thread-container[^>]*>' /tmp/cs.html | head -2
-          grep -c 'class="post"' /tmp/cs.html || true
-          echo "== page discuss link"
-          curl -sS "https://scp-wiki.wikidot.com/scp-173" | grep -o 'href="/forum/t-[0-9]*[^"]*"' | head -3
+          curl -sS -o /tmp/cs.html "https://scp-wiki.wikidot.com/scp-173/comments/show"
+          echo "== markers"; for k in post-container thread-container 'class="post' 'id="post-' 'page-comments' 'comments-container' 'action-area'; do echo "$k: $(grep -c "$k" /tmp/cs.html)"; done
+          echo "== around thread"; grep -o '.\{200\}forum/t-76692.\{200\}' /tmp/cs.html | head -2
+          curl -sS -o /tmp/th.html -D - "https://scp-wiki.wikidot.com/forum/t-76692/scp-173" | grep -iE "^HTTP"
+          echo "thread posts: $(grep -c 'id="post-' /tmp/th.html)"
