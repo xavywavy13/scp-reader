@@ -1,4 +1,5 @@
-"""Build data/canons.gz: every canon on the SCP Wiki's Canon Hub, with its articles in order.
+"""Build data/canons.gz: every canon on the SCP Wiki's Canon Hub, and every story series in its
+Series Archive, with their articles in order. Story series are marked "type": "series".
 
 For each canon listed on https://scp-wiki.wikidot.com/canon-hub this reads the canon's own
 hub page and records:
@@ -163,6 +164,49 @@ def canon_list(src):
     return out
 
 
+def clean_series_name(t):
+    t = re.sub(r"(?i)\s*\((series )?hub\)\s*$", "", t)
+    t = re.sub(r"(?i)\s+(series\s+)?hub\s*$", "", t).strip()
+    return t
+
+
+def series_list(src):
+    """Story series from the wiki's Series Archive: the blocks for series with their own tag,
+    and the paged list of series hubs."""
+    out, seen, pages = [], set(), ["series-archive"]
+    first = src.page("series-archive")
+    if not first:
+        print("Couldn't read the Series Archive; story series skipped")
+        return out
+    pc, _ = first
+    nums = [int(x) for x in re.findall(r"/series-archive/p/(\d+)", lxml.html.tostring(pc, encoding="unicode"))]
+    pages += [f"series-archive/p/{i}" for i in range(2, max(nums, default=1) + 1)]
+    for i, pg in enumerate(pages):
+        got = first if i == 0 else src.page(pg)
+        if not got:
+            continue
+        for blk in got[0].xpath('.//div[contains(concat(" ",normalize-space(@class)," ")," series-block ")]'):
+            cls = (blk.get("class") or "").split()
+            h = blk.xpath("./h3") or blk.xpath('./div[@class="title"]')
+            if not h:
+                continue
+            name = clean_series_name(text(h[0]))
+            link = h[0].xpath(".//a[@href]")
+            slug = slug_of(link[0].get("href")) if link else None
+            tag_el = blk.xpath('.//div[contains(@class,"tag-lead")]//a')
+            tag = text(tag_el[0]).lower() if tag_el else None
+            blurb = " ".join(t for t in (text(p) for p in blk.xpath('./div[contains(@class,"blurb")]//p|./div[contains(@class,"description")]')) if t)
+            if re.search(r"(?i)a blurb should go here", blurb):
+                blurb = ""
+            key = slug or ("tag:" + (tag or name.lower()))
+            if not name or key in seen:
+                continue
+            seen.add(key)
+            out.append({"id": slug or key, "t": name, "d": blurb[:500], "q": "", "qs": None, "un": False,
+                        "type": "series", "done": "_complete" in cls, "hub": bool(slug), "tag0": tag})
+    return out
+
+
 def tab_titles(navset):
     return [text(li) for li in navset.xpath('./ul[contains(@class,"yui-nav")]/li')]
 
@@ -298,11 +342,21 @@ def main():
 
     canons = canon_list(src)
     print(f"Canon Hub lists {len(canons)} canons")
+    series = series_list(src)
+    print(f"Series Archive lists {len(series)} story series")
+    canon_ids = {c["id"] for c in canons}
+    series = [x for x in series if x["id"] not in canon_ids]
+    everything = canons + series
     out = []
-    for n, c in enumerate(canons, 1):
-        got = src.page(c["id"])
+    for n, c in enumerate(everything, 1):
+        is_series = c.get("type") == "series"
+        got = src.page(c["id"]) if (not is_series or c.get("hub")) else None
         hub_tags = got[1] if got else []
-        tag = pick_tag(hub_tags, tag_count, c) or guess_tag(c, tag_count)
+        tag0 = c.pop("tag0", None) if is_series else None
+        c.pop("hub", None)
+        if tag0 and tag_count.get(tag0, 0) < 2:
+            tag0 = None
+        tag = tag0 or pick_tag(hub_tags, tag_count, c) or guess_tag(c, tag_count)
         members = set(by_tag.get(tag, [])) if tag else None
 
         def accept(s):
@@ -314,10 +368,10 @@ def main():
             rest = sorted((s for s in members if s not in listed and s in arts),
                           key=lambda s: (arts[s].get("d") or "9999", s))
             if rest:
-                sections.append({"t": "More from this canon" if listed else "", "m": rest})
+                sections.append({"t": ("More from this series" if is_series else "More from this canon") if listed else "", "m": rest})
         total = sum(len(s["m"]) for s in sections)
         if total < 2:
-            print(f"[{n}/{len(canons)}] {c['t']}: skipped ({total} articles found; hub page "
+            print(f"[{n}/{len(everything)}] {c['t']}: skipped ({total} articles found; hub page "
                   f"{'read' if got else 'not read'}, {len(hub_tags)} tags, tag {tag})")
             continue
         if sections and not sections[0]["t"] and len(sections) > 1:
@@ -325,11 +379,12 @@ def main():
         if c["qs"] and c["qs"].get("id") not in arts:
             c["qs"]["id"] = None
         out.append({**c, "tag": tag, "s": sections, "n": total})
-        print(f"[{n}/{len(canons)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
+        print(f"[{n}/{len(everything)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
 
     data = {"v": 1, "built": time.strftime("%Y-%m-%d"), "c": out}
     OUT.write_bytes(gzip.compress(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0))
-    print(f"Wrote {len(out)} canons to {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
+    print(f"Wrote {sum(1 for c in out if c.get('type') != 'series')} canons and "
+          f"{sum(1 for c in out if c.get('type') == 'series')} story series to {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":

@@ -705,7 +705,9 @@ function renderHome(){
   const readScp = scps.filter(m => isRead(m.id)).length;
   const topUnread = scps.filter(m => !isRead(m.id)).sort((a,b) => b.r - a.r).slice(0, 14);
   const hubs = IDX.hubs.filter(x => !/^SCP Series/i.test(x.t)).slice(0, 16);
-  const homeCanons = canonsSorted("yours").slice(0, 10);
+  const homeCanons = canonsSorted("yours", "canon").slice(0, 10);
+  const homeSeries = canonsSorted("yours", "series").slice(0, 10);
+  const nCanon = CANONS.filter(c => !isSeries(c)).length, nSeries = CANONS.length - nCanon;
   viewEl.innerHTML = `
     <header class="top"><h1 class="wordmark"><small>Secure · Contain · Protect</small>Field Reader</h1></header>
     ${cont ? `<button class="resume" data-id="${esc(cont.id)}"><span class="lbl">Continue reading</span><span class="t">${esc(cont.t)}</span>${cont.n||cont.k!=="scp"?`<span class="n">${esc(cont.k==="scp"?cont.n:sub(cont))}</span>`:""}<div class="bar"><i style="width:${Math.round(inprog[0][1][0]*100)}%"></i></div></button>` : ""}
@@ -720,13 +722,15 @@ function renderHome(){
       <button class="ser" data-kind="tale"><b>Tales</b><span>${fmt(ALL.filter(m=>m.k==="tale").length)} stories</span></button>
       <button class="ser" data-kind="goi"><b>Groups of Interest</b><span>${fmt(ALL.filter(m=>m.k==="goi").length)} files</span></button>
     </div>
-    ${CANONS.length ? `<h2 class="sec">Canons<button data-goto="canons">All ${fmt(CANONS.length)}</button></h2>
+    ${nCanon ? `<h2 class="sec">Canons<button data-goto="canons">All ${fmt(nCanon)}</button></h2>
     <div class="hscroll">${homeCanons.map(c => canonCardHTML(c)).join("")}</div>` : ""}
+    ${nSeries ? `<h2 class="sec">Story series<button data-goto="series">All ${fmt(nSeries)}</button></h2>
+    <div class="hscroll">${homeSeries.map(c => canonCardHTML(c)).join("")}</div>` : ""}
     <h2 class="sec">Highest rated, not yet read<button data-goto="top">See all</button></h2>
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 17</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 18</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -739,7 +743,8 @@ function randomFrom(kind){
 viewEl.addEventListener("click", e => {
   const t = e.target.closest("button,[data-id]"); if (!t) return;
   if (t.dataset.canon) return openCanon(t.dataset.canon);
-  if (t.dataset.goto === "canons") { B.kind = "canon"; return go("browse"); }
+  if (t.dataset.goto === "canons") { B.kind = "canon"; B.ctype = "canon"; return go("browse"); }
+  if (t.dataset.goto === "series") { B.kind = "canon"; B.ctype = "series"; return go("browse"); }
   if (t.dataset.id && !t.classList.contains("row")) return openArticle(t.dataset.id);
   if (t.dataset.rand) return randomFrom(t.dataset.rand);
   if (t.dataset.surprise) return openSurprise();
@@ -771,7 +776,7 @@ function browseItems(){
 }
 function renderBrowse(soft){
   const keepTop = soft ? mainEl.scrollTop : 0;
-  LS.set("browse", {kind:B.kind, series:B.series, cls:B.cls, sort:B.sort, tag:B.tag, csort:B.csort});
+  LS.set("browse", {kind:B.kind, series:B.series, cls:B.cls, sort:B.sort, tag:B.tag, csort:B.csort, ctype:B.ctype});
   if (B.kind === "canon") return renderCanonBrowse(soft, keepTop);
   const ser = seriesStats().map(([k]) => k);
   const items = browseItems();
@@ -806,23 +811,26 @@ function renderBrowse(soft){
   hydrateOffline();
 }
 function renderCanonBrowse(soft, keepTop){
-  const list = canonsSorted(B.csort || "yours");
+  const ct = B.ctype === "series" ? "series" : "canon", word = ct === "series" ? "series" : "canons";
+  const list = canonsSorted(B.csort || "yours", ct);
   viewEl.innerHTML = `
     <header class="top"><h1 class="wordmark"><small>Browse</small>Archive</h1></header>
     <div class="seg" role="group" aria-label="Type">${KINDS.map(([k,l]) => `<button data-k="${k}" aria-pressed="${B.kind===k}">${l}</button>`).join("")}</div>
+    <div class="chips" aria-label="Collection type"><button class="chip" data-ct="canon" aria-pressed="${ct === "canon"}">Canons</button><button class="chip" data-ct="series" aria-pressed="${ct === "series"}">Story series</button></div>
     <div class="ctl">
-      <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="cq" type="search" placeholder="Find a canon" autocomplete="off" spellcheck="false"></div>
+      <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="cq" type="search" placeholder="Find a ${ct === "series" ? "series" : "canon"}" autocomplete="off" spellcheck="false"></div>
       <select id="csort" aria-label="Sort">${[["yours","Yours first"],["rating","Top rated"],["az","A–Z"],["size","Most files"]].map(([v,l]) => `<option value="${v}"${(B.csort||"yours")===v?" selected":""}>${l}</option>`).join("")}</select>
     </div>
-    <div class="count" id="ccount">${CANONS.length ? `${fmt(list.length)} canons` : ""}</div>
+    <div class="count" id="ccount">${CANONS.length ? `${fmt(list.length)} ${word}` : ""}</div>
     ${CANONS.length ? `<div class="clist" id="clist">${list.map(c => canonCardHTML(c, true)).join("")}</div>`
       : `<div class="empty"><b>${canonsState === "failed" ? "Couldn't load canons" : "Loading canons"}</b>${canonsState === "failed" ? "Check your connection and reopen the app." : "One moment."}</div>`}`;
   viewEl.querySelectorAll(".seg button").forEach(b => b.onclick = () => { B.kind = b.dataset.k; B.series=""; B.cls=""; if (B.kind!=="scp" && B.sort==="num") B.sort="rating"; render(); });
   $("#csort").onchange = e => { B.csort = e.target.value; render(); };
+  viewEl.querySelectorAll("[data-ct]").forEach(b => b.onclick = () => { B.ctype = b.dataset.ct; render(); });
   $("#cq").oninput = e => {
     const q = e.target.value.trim().toLowerCase(); let n = 0;
     viewEl.querySelectorAll("#clist .ccard").forEach(c => { const on = !q || c.textContent.toLowerCase().includes(q); c.hidden = !on; n += on; });
-    $("#ccount").textContent = `${fmt(n)} canons`;
+    $("#ccount").textContent = `${fmt(n)} ${word}`;
   };
   if (soft) mainEl.scrollTop = keepTop;
 }
@@ -874,7 +882,7 @@ function renderSearch(){
     const r = search(q.value);
     const ql = q.value.trim().toLowerCase();
     const cm = /^(#|by:)/.test(ql) ? [] : CANONS.filter(c => (c.t + " " + (c.tag || "").replace(/-/g, " ")).toLowerCase().includes(ql)).slice(0, 8);
-    res.innerHTML = `${cm.length ? `<h2 class="sec">Canons</h2><div class="chipline">${cm.map(c => `<button class="hub" data-canon="${esc(c.id)}">${ICON.canon}${esc(c.t)}<span>${c.all.length}</span></button>`).join("")}</div><h2 class="sec">Files</h2>` : ""}<div class="count">${r.length >= 300 ? "300+" : fmt(r.length)} results</div><div id="sl"></div>`;
+    res.innerHTML = `${cm.length ? `<h2 class="sec">Canons &amp; series</h2><div class="chipline">${cm.map(c => `<button class="hub" data-canon="${esc(c.id)}">${ICON.canon}${esc(c.t)}<span>${c.all.length}</span></button>`).join("")}</div><h2 class="sec">Files</h2>` : ""}<div class="count">${r.length >= 300 ? "300+" : fmt(r.length)} results</div><div id="sl"></div>`;
     lazyList($("#sl"), r, `<div class="empty"><b>No match</b>Nothing in the archive fits “${esc(q.value)}”.</div>`);
   };
   let t; q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(run, 120); });
@@ -1046,8 +1054,10 @@ function canonStats(c){
 }
 const hrs = h => h < 1 ? Math.max(5, Math.round(h * 12) * 5) + " min" : (h < 10 ? h.toFixed(1).replace(/\.0$/, "") : Math.round(h)) + " h";
 const sortName = t => t.replace(/^the\s+/i, "").toLowerCase();
-function canonsSorted(mode){
-  const list = CANONS.map(c => [c, canonStats(c)]);
+const isSeries = c => c && c.type === "series";
+const kindWord = c => isSeries(c) ? "series" : "canon";
+function canonsSorted(mode, type){
+  const list = CANONS.filter(c => !type || (type === "series") === isSeries(c)).map(c => [c, canonStats(c)]);
   if (mode === "az") list.sort((a, b) => sortName(a[0].t).localeCompare(sortName(b[0].t)));
   else if (mode === "size") list.sort((a, b) => b[1].n - a[1].n);
   else if (mode === "rating") list.sort((a, b) => b[1].avg - a[1].avg);
@@ -1056,7 +1066,7 @@ function canonsSorted(mode){
 }
 function canonCardHTML(c, wide){
   const s = canonStats(c);
-  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">Canon · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`} · avg ${s.avg >= 0 ? "+" : ""}${fmt(s.avg)}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
+  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">${isSeries(c) ? "Series" : "Canon"} · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}${c.done ? " · complete" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`} · avg ${s.avg >= 0 ? "+" : ""}${fmt(s.avg)}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
 }
 function canonRow(m, n){
   const h = rowHTML(m);
@@ -1090,10 +1100,10 @@ function renderCanon(top){
     if (canonSort === "old") ms.sort((a, b) => (a.d || "9999").localeCompare(b.d || "9999")); else ms.sort((a, b) => b.r - a.r);
     list = ms.length ? `<div class="rows" style="margin-top:14px">${ms.map(m => canonRow(m)).join("")}</div>` : "";
   }
-  if (!list) list = `<div class="empty"><b>All read</b>Turn off Hide read to see the whole canon again.</div>`;
+  if (!list) list = `<div class="empty"><b>All read</b>Turn off Hide read to see the whole ${kindWord(c)} again.</div>`;
   const qs = c.qs;
   body.innerHTML = `<div class="chero">
-      <div class="ck">Canon${c.un ? ` · <span>unmaintained</span>` : ""}</div>
+      <div class="ck">${isSeries(c) ? "Story series" : "Canon"}${c.un ? ` · <span>unmaintained</span>` : ""}${c.done ? ` · <span>complete</span>` : ""}</div>
       <h2 class="ct">${esc(c.t)}</h2>
       ${c.d ? `<p class="cd">${esc(c.d)}</p>` : ""}
       ${c.q ? `<blockquote class="cq"><p>${esc(c.q)}</p>${qs ? `<footer>From ${qs.id && BY.has(qs.id) ? `<button data-id="${esc(qs.id)}">${esc(qs.t)}</button>` : esc(qs.t)}${qs.a ? ` by ${esc(qs.a)}` : ""}</footer>` : ""}</blockquote>` : ""}
@@ -1103,9 +1113,9 @@ function renderCanon(top){
       <div class="offl" data-off="canon:${esc(c.id)}"></div>
     </div>
     <div class="ctl"><div class="seg" role="group" aria-label="Order" style="flex:1">${[["hub", "Hub order"], ["old", "Oldest"], ["rating", "Top rated"]].map(([k, l]) => `<button data-cs="${k}" aria-pressed="${canonSort === k}">${l}</button>`).join("")}</div></div>
-    <div class="ctl"><span class="count" style="margin:0">${canonSort === "hub" ? "In the order the canon's hub lists them" : canonSort === "old" ? "In the order they were posted" : "Highest rated first"}</span><label class="tog"><input type="checkbox" id="cHide"${hide ? " checked" : ""}>Hide read</label></div>
+    <div class="ctl"><span class="count" style="margin:0">${canonSort === "hub" ? "In the order the ${kindWord(c)}'s hub lists them" : canonSort === "old" ? "In the order they were posted" : "Highest rated first"}</span><label class="tog"><input type="checkbox" id="cHide"${hide ? " checked" : ""}>Hide read</label></div>
     ${list}
-    <p class="cwiki"><a href="https://scp-wiki.wikidot.com/${esc(c.id)}" target="_blank" rel="noopener">${ICON.ext}Open the canon hub on the wiki</a></p>`;
+    <p class="cwiki"><a href="${c.id.startsWith("tag:") ? `https://scp-wiki.wikidot.com/system:page-tags/tag/${esc(c.id.slice(4))}` : `https://scp-wiki.wikidot.com/${esc(c.id)}`}" target="_blank" rel="noopener">${ICON.ext}${c.id.startsWith("tag:") ? `See the ${kindWord(c)}'s tag on the wiki` : `Open the ${kindWord(c)} hub on the wiki`}</a></p>`;
   body.scrollTop = keep;
   hydrateOffline();
 }
@@ -1122,7 +1132,7 @@ function canonEndHTML(m){
   const i = c.all.indexOf(m.id), s = canonStats(c), nx = c.all[i + 1] ? BY.get(c.all[i + 1]) : null;
   const sec = c.s.find(x => x.m.includes(m.id));
   return `<div class="ccanon">
-      <div class="k">Part of a canon${list.length > 1 ? ` · also in ${list.length - 1} more` : ""}</div>
+      <div class="k">Part of a ${isSeries(c) ? "story series" : "canon"}${list.length > 1 ? ` · also in ${list.length - 1} more` : ""}</div>
       <button class="cn" data-canon="${esc(c.id)}">${esc(c.t)}</button>
       <div class="m">${sec && sec.t ? esc(sec.t) + " · " : ""}No. ${i + 1} of ${fmt(s.n)} · ${fmt(s.read)} read</div>
       <div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div>
@@ -1555,7 +1565,7 @@ async function hydrateOffline(only){
         ${np && !withPics ? `<button class="act" data-offpics="${esc(key)}">Add pictures</button>` : ""}<button class="act" data-offrm="${esc(key)}">Remove</button></div>`;
     } else {
       const left = chs.length - have;
-      el.innerHTML = `<button class="ob" data-offdl="${esc(key)}">${ICON.cloud}<span><b>${key === "all:" ? "Download every file" : `Download ${key.startsWith("canon:") ? "this canon" : esc(col.label)} for offline`}</b><small>${fmt(col.ids.length)} files · about ${mbText(estMB(have ? chs.slice(0, left) : chs))}${have ? " left" : ""}${np ? ` · ${fmt(np)} pictures` : ""}</small></span><span class="act">Download</span></button>`;
+      el.innerHTML = `<button class="ob" data-offdl="${esc(key)}">${ICON.cloud}<span><b>${key === "all:" ? "Download every file" : `Download ${key.startsWith("canon:") ? "this " + kindWord(CANON_BY.get(key.slice(6))) : esc(col.label)} for offline`}</b><small>${fmt(col.ids.length)} files · about ${mbText(estMB(have ? chs.slice(0, left) : chs))}${have ? " left" : ""}${np ? ` · ${fmt(np)} pictures` : ""}</small></span><span class="act">Download</span></button>`;
     }
   }
 }
