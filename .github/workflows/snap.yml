@@ -20,14 +20,15 @@ jobs:
                   b = await p.chromium.launch()
                   pg = await b.new_page(viewport={"width": 430, "height": 900}, device_scale_factor=1.5)
                   for s in pages:
-                      await pg.goto(f"https://scp-wiki.wikidot.com/{s}", wait_until="networkidle", timeout=90000)
-                      await pg.wait_for_timeout(2500)
+                      await pg.goto(f"https://scp-wiki.wikidot.com/{s}", wait_until="load", timeout=90000)
+                      await pg.wait_for_timeout(6000)
                       await pg.screenshot(path=f"shots/{s}.png", full_page=True)
                       open(f"shots/{s}.html", "w").write(await pg.content())
                   await b.close()
           asyncio.run(main())
           PY
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: shots
           path: shots
