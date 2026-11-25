@@ -23,11 +23,19 @@ import sys
 import time
 from pathlib import Path
 
+import hashlib
+
 import lxml.html
+from lxml import etree
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from scp_clean import clean  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "data" / "index.gz"
 OUT = ROOT / "data" / "canons.gz"
+HUBDIR = ROOT / "data" / "hubs"          # the hub pages themselves, cleaned like articles
+HUB_CHUNK = 900_000
 WIKI = "https://scp-wiki.wikidot.com"
 GENERIC_TAGS = {"hub", "canon-hub", "group-hub", "series-hub", "co-authored", "collaboration",
                 "illustrated", "audio", "video", "rewrite", "featured", "reviewers-spotlight",
@@ -222,6 +230,53 @@ def hub_image(pc):
     return None
 
 
+def hub_page_html(pc):
+    """The hub page cleaned like an article. Image-credit blocks are labelled as such and
+    moved to the end, so the page opens on its actual content."""
+    html = clean('<div id="page-content">' + "".join(lxml.html.tostring(ch, encoding="unicode") for ch in pc) + "</div>")
+    if not html:
+        return ""
+    try:
+        root = lxml.html.fromstring(f"<div>{html}</div>")
+    except Exception:  # noqa: BLE001
+        return html
+    # "ACCESS DOCUMENT" / "Show" style buttons: name them after the heading just above
+    GENERIC = re.compile(r"(?i)^\W*(access|open|show|view|read|expand|click|reveal|more|document|\+|>|▷|►|\s)*\W*$")
+    for det in root.xpath(".//details"):
+        summ = det.find("summary")
+        if summ is None or not GENERIC.match(summ.text_content().replace("\xa0", " ")):
+            continue
+        prev, hops, label = det.getprevious(), 0, ""
+        while prev is not None and hops < 4 and not label:
+            heads = [prev] if prev.tag in ("h1", "h2", "h3", "h4", "h5", "h6") else prev.xpath(".//h1|.//h2|.//h3|.//h4|.//h5|.//h6")
+            if heads:
+                label = WS.sub(" ", heads[-1].text_content()).strip()
+            elif prev.tag == "p" and 2 < len(prev.text_content().strip()) < 70:
+                label = WS.sub(" ", prev.text_content()).strip()
+            prev, hops = prev.getprevious(), hops + 1
+        if label:
+            if 2 < len(label) < 70:
+                for ch in list(summ):
+                    summ.remove(ch)
+                summ.text = label
+    moved = []
+    for det in root.xpath(".//details"):
+        t = det.text_content()
+        if CREDIT.search(t[:600]) or re.search(r"(?i)image credits?|attribution", t[:200]):
+            summ = det.find("summary")
+            if summ is not None:
+                summ.text = "Image credits"
+                for ch in list(summ):
+                    summ.remove(ch)
+            det.getparent().remove(det)
+            moved.append(det)
+    for det in moved:
+        root.append(det)
+    out = "".join(lxml.html.tostring(ch, encoding="unicode") for ch in root)
+    text_ = re.sub(r"<[^>]+>", " ", out)
+    return out if len(text_.split()) >= 15 else ""
+
+
 def clean_series_name(t):
     t = re.sub(r"(?i)\s*\((series )?hub\)\s*$", "", t)
     t = re.sub(r"(?i)\s+(series\s+)?hub\s*$", "", t).strip()
@@ -406,7 +461,7 @@ def main():
     canon_ids = {c["id"] for c in canons}
     series = [x for x in series if x["id"] not in canon_ids]
     everything = canons + series
-    out = []
+    out, hub_html = [], {}
     for n, c in enumerate(everything, 1):
         is_series = c.get("type") == "series"
         got = src.page(c["id"]) if (not is_series or c.get("hub")) else None
@@ -442,6 +497,9 @@ def main():
         if c["qs"] and c["qs"].get("id") not in arts:
             c["qs"]["id"] = None
         if got:
+            hp = hub_page_html(got[0])
+            if hp:
+                hub_html[c["id"]] = hp
             if not c.get("d"):
                 c["d"] = hub_intro(got[0], c["t"])
             if not c.get("img"):
@@ -451,8 +509,32 @@ def main():
         out.append({**c, "tag": tag, "s": sections, "n": total})
         print(f"[{n}/{len(everything)}] {c['t']}: {total} articles in {len(sections)} sections (tag {tag})")
 
-    data = {"v": 1, "built": time.strftime("%Y-%m-%d"), "c": out}
+    # hub pages go in their own chunks, loaded only when someone opens a hub
+    HUBDIR.mkdir(parents=True, exist_ok=True)
+    for f in HUBDIR.glob("*.gz"):
+        f.unlink()
+    hv, chunk, size, ci = {}, {}, 0, 0
+
+    def flush():
+        nonlocal chunk, size, ci
+        if chunk:
+            data_ = gzip.compress(json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0)
+            (HUBDIR / f"{ci:02d}.gz").write_bytes(data_)
+            hv[str(ci)] = hashlib.sha1(data_).hexdigest()[:10]
+            chunk, size, ci = {}, 0, ci + 1
+    for c in out:
+        html = hub_html.get(c["id"])
+        if not html:
+            continue
+        if size + len(html) > HUB_CHUNK and chunk:
+            flush()
+        chunk[c["id"]] = html
+        size += len(html)
+        c["hc"] = ci
+    flush()
+    data = {"v": 1, "built": time.strftime("%Y-%m-%d"), "hv": hv, "c": out}
     OUT.write_bytes(gzip.compress(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode(), 9, mtime=0))
+    print(f"Hub pages: {len(hub_html)} in {len(hv)} chunks")
     print(f"Wrote {sum(1 for c in out if c.get('type') != 'series')} canons and "
           f"{sum(1 for c in out if c.get('type') == 'series')} story series to {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
 

@@ -143,12 +143,13 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .ccard .k{font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
 .ctop{display:flex;gap:12px;align-items:center;min-width:0}
 .ctop > span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
-.em{flex:0 0 auto;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;overflow:hidden;position:relative;
+.em{flex:0 0 auto;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
   background:hsl(var(--h) var(--em-s) var(--em-l));color:hsl(var(--h) 45% var(--em-fg));font:700 21px/1 var(--f-display);letter-spacing:.02em;text-transform:uppercase}
 .em::after{content:"";position:absolute;inset:5px;border:1.5px solid currentColor;opacity:.28;border-radius:8px}
 .em.series{border-radius:50%}
 .em.series::after{border-radius:50%}
-.em img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface);z-index:1;opacity:0;transition:opacity .2s}
+.em > b{font:inherit;position:relative}
+.em img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;background:var(--surface);z-index:1;opacity:0;transition:opacity .2s}
 .em img.ok{opacity:1}
 .em.big{width:84px;height:84px;font-size:34px;border-radius:18px}
 .em.big::after{inset:7px;border-radius:12px}
@@ -175,6 +176,16 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .cgo b{font:700 22px/1.05 var(--f-display);text-transform:uppercase}
 .cgo span{font:italic 400 15px/1.3 var(--f-read);opacity:.92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cgo:active{transform:scale(.985)}
+.cview{display:flex;gap:4px;margin-top:18px;border-bottom:1px solid var(--line)}
+.cview button{padding:10px 14px;font-weight:700;font-size:15px;color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px}
+.cview button span{font:500 12px var(--f-mono);color:var(--faint);margin-left:4px}
+.cview button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.hubdoc{--r-bg:var(--surface);--r-ink:var(--ink);--r-muted:var(--muted);--r-line:var(--line);--r-accent:var(--accent);--r-soft:var(--raise);
+  margin-top:16px;color:var(--ink);font:400 17px/1.62 var(--f-read);max-width:38em}
+.hubdoc .rbody h1,.hubdoc .rbody h2,.hubdoc .rbody h3{color:var(--ink)}
+.hubdoc .rbody blockquote,.hubdoc .rbody .blockquote{font-family:inherit;font-size:.96em;line-height:1.6;border-style:solid}
+.hubdoc .rbody summary{font-size:.8em}
+.hubdoc .loading{padding:40px 0;text-align:center;font:500 12px var(--f-mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
 .csec{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:600 12px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:24px 0 6px}
 .csec span:last-child{font-variant-numeric:tabular-nums;color:var(--faint);flex:0 0 auto}
 .row.num{grid-template-columns:2.1em 1fr auto}
@@ -744,7 +755,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 19</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 20</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -1038,12 +1049,56 @@ function mentionedHTML(m){
     ${ids.length > show.length ? `<button class="all" data-mentions="${esc(m.id)}">See all ${fmt(ids.length)}</button>` : ""}</section>`;
 }
 
+/* pictures in place of picture links, and wide tables that scroll sideways */
+function enhanceBody(root){
+  root.querySelectorAll(".rbody a.img").forEach(a => {
+    const img = document.createElement("img");
+    img.className = "pic"; img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
+    img.alt = a.textContent === "Image" ? "" : a.textContent;
+    img.src = a.href;
+    img.addEventListener("error", () => { if (img.isConnected) img.replaceWith(a); }, {once:true});
+    a.replaceWith(img);
+  });
+  root.querySelectorAll(".rbody table").forEach(t => { if (!t.parentElement.classList.contains("tw")) { const w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); } });
+}
+function switchTab(tab){
+  const set = tab.closest(".tabset"), i = tab.dataset.i;
+  set.querySelectorAll(":scope > .tabbar .tab").forEach(t => t.classList.toggle("on", t.dataset.i === i));
+  set.querySelectorAll(":scope > .pane").forEach(p => p.hidden = p.dataset.i !== i);
+}
+function showFootnote(scope, a){
+  if (a.dataset.fn.startsWith("footnoteref")) { const t = scope.querySelector("#" + CSS.escape(a.dataset.fn)); if (t) t.scrollIntoView({block: "center"}); return; }
+  const fn = scope.querySelector("#" + CSS.escape(a.dataset.fn));
+  const txt = fn ? fn.innerHTML.replace(/^\s*<a[^>]*>[^<]*<\/a>\s*\.?\s*/i, "") : "Footnote not found.";
+  openSheet(`<h4>Footnote ${esc(a.textContent)}</h4><div class="fn-text">${txt}</div>`);
+}
+
 /* ---------------- canons ---------------- */
 let CANONS = [], CANON_BY = new Map(), CANON_OF = new Map(), canonsState = "loading";
-let canonId = null, canonSort = "hub", curCanon = null;
+let canonId = null, canonSort = "hub", curCanon = null, canonView = "files", HUBV = {};
+const hubChunks = new Map();
+function getHubChunk(n){
+  if (!hubChunks.has(n)) {
+    const pr = fetchGz(`data/hubs/${String(n).padStart(2, "0")}.gz?v=${encodeURIComponent(HUBV[n] || "1")}`).catch(e => { hubChunks.delete(n); throw e; });
+    hubChunks.set(n, pr);
+  }
+  return hubChunks.get(n);
+}
+async function loadHubDoc(c){
+  const box = $("#hubdoc"); if (!box) return;
+  try {
+    const ch = await getHubChunk(c.hc);
+    if (canonId !== c.id || canonView !== "hub" || !$("#hubdoc")) return;
+    box.innerHTML = `<article class="rbody">${ch[c.id] || "<p>This hub page is empty.</p>"}</article>`;
+    enhanceBody(box);
+  } catch {
+    box.innerHTML = `<div class="empty"><b>Couldn't load the hub page</b>Check your connection and try again.</div>`;
+  }
+}
 async function loadCanons(){
   try {
     const d = await fetchGz("data/canons.gz");
+    HUBV = d.hv || {};
     CANONS = (d.c || []).map(c => {
       c.s = (c.s || []).map(s => ({t: s.t, m: s.m.filter(id => BY.has(id))})).filter(s => s.m.length);
       c.all = [...new Set(c.s.flatMap(s => s.m))];
@@ -1083,7 +1138,7 @@ function emblemHTML(c, big){
   let hsh = 0; for (const ch of c.t) hsh = (hsh * 31 + ch.codePointAt(0)) >>> 0;
   const words = c.t.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(w => w && !/^(the|a|an|of|and|in|on|to|for)$/i.test(w));
   const ini = (words.length > 1 ? [...words[0]][0] + [...words[1]][0] : [...(words[0] || c.t)].slice(0, 2).join("")) || "?";
-  return `<span class="em${isSeries(c) ? " series" : ""}${big ? " big" : ""}" style="--h:${hsh % 360}" aria-hidden="true">${esc(ini)}${c.img ? `<img class="emimg" src="${esc(c.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span>`;
+  return `<span class="em${isSeries(c) ? " series" : ""}${big ? " big" : ""}" style="--h:${hsh % 360}" aria-hidden="true"><b>${esc(ini)}</b>${c.img ? `<img class="emimg" src="${esc(c.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span>`;
 }
 // who wrote it: the most frequent authors among its files
 function authorsOf(c, max = 2){
@@ -1108,7 +1163,7 @@ function canonRow(m, n){
 }
 function openCanon(id, fromReader){
   if (!CANON_BY.has(id)) return;
-  if (canonId !== id) canonSort = "hub";
+  if (canonId !== id) { canonSort = "hub"; canonView = "files"; }
   canonId = id;
   const o = $("#canonO"); o.style.zIndex = fromReader ? 55 : "";
   renderCanon(true);
@@ -1148,15 +1203,33 @@ function renderCanon(top){
       ${nm ? `<button class="cgo" data-id="${esc(nm.id)}"><small>${go}</small><b>${esc(nm.t)}</b>${nm.k === "scp" ? (nm.n ? `<span>${esc(nm.n)}</span>` : "") : (nm.a ? `<span>by ${esc(nm.a)}</span>` : "")}</button>` : ""}
       <div class="offl" data-off="canon:${esc(c.id)}"></div>
     </div>
+    ${c.hc != null ? `<div class="cview" role="tablist"><button data-cv="files" role="tab" aria-selected="${canonView !== "hub"}">Files <span>${fmt(s.n)}</span></button><button data-cv="hub" role="tab" aria-selected="${canonView === "hub"}">Hub page</button></div>` : ""}
+    ${canonView === "hub" && c.hc != null ? `<div class="hubdoc" id="hubdoc"><div class="loading">Opening the hub page<i></i></div></div>` : `
     <div class="ctl"><div class="seg" role="group" aria-label="Order" style="flex:1">${[["hub", "Hub order"], ["old", "Oldest"], ["rating", "Top rated"]].map(([k, l]) => `<button data-cs="${k}" aria-pressed="${canonSort === k}">${l}</button>`).join("")}</div></div>
     <div class="ctl"><span class="count" style="margin:0">${canonSort === "hub" ? "In the order the ${kindWord(c)}'s hub lists them" : canonSort === "old" ? "In the order they were posted" : "Highest rated first"}</span><label class="tog"><input type="checkbox" id="cHide"${hide ? " checked" : ""}>Hide read</label></div>
-    ${list}
+    ${list}`}
     <p class="cwiki"><a href="${c.id.startsWith("tag:") ? `https://scp-wiki.wikidot.com/system:page-tags/tag/${esc(c.id.slice(4))}` : `https://scp-wiki.wikidot.com/${esc(c.id)}`}" target="_blank" rel="noopener">${ICON.ext}${c.id.startsWith("tag:") ? `See the ${kindWord(c)}'s tag on the wiki` : `Open the ${kindWord(c)} hub on the wiki`}</a></p>`;
   body.scrollTop = keep;
   hydrateOffline();
+  if (canonView === "hub" && c.hc != null) loadHubDoc(c);
 }
 $("#canonB").addEventListener("click", e => {
+  // links, footnotes and tabs inside the hub page
+  const hd = e.target.closest("#hubdoc");
+  if (hd) {
+    const a = e.target.closest("a, .tab");
+    if (a && a.classList.contains("tab")) return switchTab(a);
+    if (a && a.dataset.fn) { e.preventDefault(); return showFootnote(hd, a); }
+    if (a && a.dataset.w !== undefined) {
+      const slug = a.dataset.w;
+      if (BY.has(slug)) { e.preventDefault(); return state.set.links === "open" ? openArticle(slug, {canon: canonId}) : previewLink(slug); }
+      if (CANON_BY.has(slug)) { e.preventDefault(); return openCanon(slug); }
+    }
+    if (a && a.getAttribute("href") === "#") e.preventDefault();
+    return;
+  }
   const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.cv) { canonView = t.dataset.cv; const top = $("#canonB").querySelector(".cview"); const y = top ? top.offsetTop - 8 : 0; renderCanon(); $("#canonB").scrollTop = Math.min($("#canonB").scrollTop, y); return; }
   if (t.dataset.cs) { canonSort = t.dataset.cs; return renderCanon(); }
   if (t.dataset.id) return openArticle(t.dataset.id, {canon: canonId});
 });
@@ -1274,15 +1347,7 @@ async function openArticle(id, opts = {}){
     const html = ch[m.id] || "<p>This file is empty.</p>";
     curFwd = [...new Set([...html.matchAll(/data-w="([^"]+)"/g)].map(x => x[1]))].filter(x => x !== m.id && BY.has(x));
     RW.innerHTML = headerHTML(m) + `<article class="rbody">${html}</article>` + endHTML(m);
-    RW.querySelectorAll(".rbody a.img").forEach(a => {
-      const img = document.createElement("img");
-      img.className = "pic"; img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
-      img.alt = a.textContent === "Image" ? "" : a.textContent;
-      img.src = a.href;
-      img.addEventListener("error", () => { if (img.isConnected) img.replaceWith(a); }, {once:true});
-      a.replaceWith(img);
-    });
-    RW.querySelectorAll(".rbody table").forEach(t => { if (!t.parentElement.classList.contains("tw")) { const w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); } });
+    enhanceBody(RW);
     if (!LS.get("swipeTip", 0)) { const [a, b] = swipeTargets(m); if (a || b) setTimeout(() => { if (cur === m) { toast("Tip: swipe sideways for the next or previous file"); LS.set("swipeTip", 1); } }, 2600); }
     const p = progOf(id);
     if (p > 0.02 && p < 0.985 && !opts.top) { requestAnimationFrame(() => { RS.scrollTop = p * (RS.scrollHeight - RS.clientHeight); toast("Picked up where you left off"); }); }
@@ -1345,20 +1410,8 @@ RW.addEventListener("click", e => {
   }
   const a = e.target.closest("a, button, .tab");
   if (!a) { if (!e.target.closest("summary,details,input")) R.classList.toggle("hidebar"); return; }
-  if (a.classList.contains("tab")) {
-    const set = a.closest(".tabset"), i = a.dataset.i;
-    set.querySelectorAll(":scope > .tabbar .tab").forEach(t => t.classList.toggle("on", t.dataset.i === i));
-    set.querySelectorAll(":scope > .pane").forEach(p => p.hidden = p.dataset.i !== i);
-    return;
-  }
-  if (a.dataset.fn) {
-    e.preventDefault();
-    if (a.dataset.fn.startsWith("footnoteref")) { const t = RW.querySelector("#" + CSS.escape(a.dataset.fn)); if (t) t.scrollIntoView({block:"center"}); return; }
-    const fn = RW.querySelector("#" + CSS.escape(a.dataset.fn));
-    let txt = fn ? fn.innerHTML.replace(/^\s*<a[^>]*>[^<]*<\/a>\s*\.?\s*/i, "") : "Footnote not found.";
-    openSheet(`<h4>Footnote ${esc(a.textContent)}</h4><div class="fn-text">${txt}</div>`);
-    return;
-  }
+  if (a.classList.contains("tab")) return switchTab(a);
+  if (a.dataset.fn) { e.preventDefault(); return showFootnote(RW, a); }
   if (a.dataset.w !== undefined && a.tagName === "A") {
     const slug = a.dataset.w;
     if (BY.has(slug)) { e.preventDefault(); if (state.set.links === "open") openArticle(slug); else previewLink(slug); }
