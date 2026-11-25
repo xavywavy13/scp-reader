@@ -68,6 +68,9 @@ def add(kind, v, extra):
         "g": tags,
         "w": len(re.sub(r"<[^>]+>", " ", html).split()),
     }
+    pics = html.count('class="img"')   # pictures in the article, for offline size estimates
+    if pics:
+        m["i"] = pics
     m.update({k: x for k, x in extra.items() if k != "title" and x not in (None, "")})
     records.append((extra.get("_sort"), m, html))
 

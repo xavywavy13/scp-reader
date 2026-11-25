@@ -110,6 +110,7 @@ h2.sec button{font:500 13px var(--f-ui);letter-spacing:0;text-transform:none;col
 .offl .ob small{display:block;font:400 12px var(--f-mono);color:var(--muted);margin-top:1px}
 .offl .ob .act{margin-left:auto;font:700 13px var(--f-ui);color:var(--accent);flex:0 0 auto}
 .offl .ob.saved svg{color:var(--c-safe)}
+.offl .ob.saved .act + .act{margin-left:14px}
 .offl .bar{margin-top:6px}
 .offlist{display:grid;gap:8px}
 .daily{margin-top:12px;display:block;width:100%;text-align:left;padding:18px 16px;border-radius:16px;background:var(--ink);color:var(--bg);position:relative;overflow:hidden}
@@ -687,7 +688,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 14</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 15</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -1222,7 +1223,7 @@ function setRead(id, on, auto){
 function updBm(){ const on = cur && isBm(cur.id); const b = $("#rBm"); b.querySelector("path").setAttribute("fill", on ? "currentColor" : "none"); b.style.color = on ? "var(--r-accent)" : ""; b.setAttribute("aria-pressed", on); }
 $("#rBm").onclick = () => {
   if (!cur) return; const bm = {...state.lib.bm};
-  if (bm[cur.id]) { delete bm[cur.id]; toast("Removed from Saved"); } else { bm[cur.id] = today(); toast("Saved to Library"); }
+  if (bm[cur.id]) { delete bm[cur.id]; toast("Removed from Saved"); releaseFileOffline(cur.id); } else { bm[cur.id] = today(); toast("Saved to Library · kept offline"); keepFileOffline(cur.id); }
   state.lib = {...state.lib, bm}; save("lib"); updBm();
 };
 function closeReader(){
@@ -1341,6 +1342,7 @@ function openSurprise(){
 
 /* ---------------- download for offline ---------------- */
 const DATA_CACHE = "data-v3";   // must match DATA in sw.js
+const IMG_CACHE = "img-v1";     // must match IMG in sw.js
 const offJobs = new Map();
 const chunkHref = n => new URL(chunkUrl(n), location.href).href;
 function collection(key){
@@ -1348,25 +1350,84 @@ function collection(key){
   if (kind === "series") return {label: seriesLabel(val), ids: ALL.filter(m => m.k === "scp" && seriesKey(m.s) === val).map(m => m.id)};
   if (kind === "kind") return {label: val === "tale" ? "All tales" : "All Groups of Interest", ids: ALL.filter(m => m.k === val).map(m => m.id)};
   if (kind === "canon") { const c = CANON_BY.get(val); return c ? {label: c.t, ids: c.all} : {label: "Canon", ids: []}; }
+  if (kind === "file") { const m = BY.get(val); return {label: m ? m.t : val, ids: m ? [m.id] : []}; }
   return {label: "Everything", ids: ALL.map(m => m.id)};
 }
 const chunksOf = ids => [...new Set(ids.map(id => BY.get(id)).filter(Boolean).map(m => m.ch))];
+const picsOf = ids => ids.reduce((n, id) => n + ((BY.get(id) || {}).i || 0), 0);
 const estMB = chs => Math.max(1, Math.round(chs.length * 0.55));
+const picMB = n => Math.max(1, Math.round(n * 0.2));
+const mbText = mb => mb >= 1000 ? (mb / 1000).toFixed(1).replace(/\.0$/, "") + " GB" : mb + " MB";
+async function cacheKeys(name){ try { const c = await caches.open(name); return new Set((await c.keys()).map(r => r.url)); } catch { return new Set(); } }
 async function cachedCount(chs){
   if (!("caches" in window)) return 0;
-  const c = await caches.open(DATA_CACHE);
-  const have = new Set((await c.keys()).map(r => r.url));
+  const have = await cacheKeys(DATA_CACHE);
   return chs.filter(n => have.has(chunkHref(n))).length;
 }
-async function downloadOffline(key){
+// picture addresses inside an article's saved text (as the reader shows them)
+const unent = s => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+async function picUrls(ids){
+  const byChunk = new Map();
+  for (const id of ids) { const m = BY.get(id); if (m && m.i) { if (!byChunk.has(m.ch)) byChunk.set(m.ch, []); byChunk.get(m.ch).push(id); } }
+  const urls = new Set();
+  for (const [n, list] of byChunk) {
+    let ch; try { ch = await getChunk(n); } catch { continue; }
+    for (const id of list) for (const x of (ch[id] || "").matchAll(/class="img" href="([^"]+)"/g)) { const u = unent(x[1]); if (/^https?:\/\//.test(u)) urls.add(u); }
+  }
+  return [...urls];
+}
+async function savePics(urls, job, onTick){
+  const cache = await caches.open(IMG_CACHE), have = await cacheKeys(IMG_CACHE);
+  const queue = urls.filter(u => !have.has(u));
+  if (job) job.pdone += urls.length - queue.length;
+  const worker = async () => {
+    while (queue.length && !(job && job.stop)) {
+      const u = queue.shift();
+      try {
+        // the wiki's picture server doesn't allow copying, so this is a sealed ("opaque") copy:
+        // the app can't look inside it, but it can show it in the reader when offline
+        const res = await fetch(u, {mode: "no-cors", referrerPolicy: "no-referrer", credentials: "omit"});
+        await cache.put(u, res);
+      } catch { if (job) job.pfailed++; }
+      if (job) job.pdone++;
+      onTick && onTick();
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]);
+}
+async function dropPics(urls){
+  if (!urls.length) return;
+  const cache = await caches.open(IMG_CACHE);
+  for (const u of urls) await cache.delete(u);
+}
+// pictures that something else still needs: other saved collections with pictures, and saved files
+async function picsStillNeeded(exceptKey){
+  const saved = LS.get("offline", {});
+  const ids = new Set(Object.keys(state.lib.bm));
+  for (const [k, v] of Object.entries(saved)) if (k !== exceptKey && v.pics) collection(k).ids.forEach(id => ids.add(id));
+  return new Set(await picUrls([...ids]));
+}
+function askDownload(key){
+  const col = collection(key), chs = chunksOf(col.ids), np = picsOf(col.ids);
+  if (!np) return downloadOffline(key, false);
+  const big = picMB(np) > 600;
+  openSheet(`<h4>Download ${key === "all:" ? "every file" : esc(col.label)}</h4>
+    <p class="note"><b>${fmt(col.ids.length)}</b> files, about <b>${mbText(estMB(chs))}</b> of text.</p>
+    <label class="tog" style="margin:12px 0 0;justify-content:flex-start;color:var(--ink)"><input type="checkbox" id="dlPics"${big ? "" : " checked"}>Include ${fmt(np)} pictures (roughly ${mbText(picMB(np))})</label>
+    ${big ? `<p class="note" style="margin-top:6px">That's a lot of pictures. Leave this off unless you have plenty of space.</p>` : ""}
+    <div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="dlGo">Download</button></div>`, () => {
+    $("#dlGo").onclick = () => { const pics = $("#dlPics").checked; closeSheet(); downloadOffline(key, pics); };
+  });
+}
+async function downloadOffline(key, pics){
   if (!("caches" in window)) return toast("This browser can't save files for offline reading");
   if (offJobs.has(key)) return;
   const col = collection(key), chs = chunksOf(col.ids);
-  const job = {done: 0, total: chs.length, failed: 0, stop: false};
+  const job = {done: 0, total: chs.length, failed: 0, stop: false, pics, pdone: 0, ptotal: 0, pfailed: 0, phase: "text"};
   offJobs.set(key, job); hydrateOffline(key);
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
   const cache = await caches.open(DATA_CACHE);
-  const have = new Set((await cache.keys()).map(r => r.url));
+  const have = await cacheKeys(DATA_CACHE);
   const queue = [...chs];
   const worker = async () => {
     while (queue.length && !job.stop) {
@@ -1384,68 +1445,102 @@ async function downloadOffline(key){
     }
   };
   await Promise.all([worker(), worker(), worker()]);
+  if (pics && !job.stop && !job.failed) {
+    job.phase = "pics"; hydrateOffline(key);
+    const urls = await picUrls(col.ids);
+    job.ptotal = urls.length;
+    let t = 0;
+    await savePics(urls, job, () => { if (++t % 3 === 0) hydrateOffline(key); });
+  }
   offJobs.delete(key);
   if (!job.stop && !job.failed) {
-    const saved = LS.get("offline", {}); saved[key] = {label: col.label, ts: Date.now()}; LS.set("offline", saved);
-    toast(`${col.label} is saved for offline reading`);
+    const saved = LS.get("offline", {});
+    saved[key] = {label: col.label, ts: Date.now(), pics: !!pics || !!(saved[key] && saved[key].pics)};
+    LS.set("offline", saved);
+    toast(job.pfailed ? `${col.label} is saved. ${job.pfailed} pictures didn't download.` : `${col.label} is saved for offline reading`);
   } else if (job.failed) toast(`${job.failed} part${job.failed > 1 ? "s" : ""} didn't download. Tap Download again when you have a better connection.`);
   hydrateOffline();
 }
 async function removeOffline(key){
+  const was = LS.get("offline", {})[key];
   const saved = LS.get("offline", {}); delete saved[key]; LS.set("offline", saved);
   const keep = new Set(Object.keys(saved).flatMap(k => chunksOf(collection(k).ids)));
-  const drop = new Set(chunksOf(collection(key).ids).filter(n => !keep.has(n)).map(n => `/data/c/${String(n).padStart(3, "0")}.gz`));
+  const col = collection(key);
   if ("caches" in window) {
+    if (was && was.pics) {
+      const mine = await picUrls(col.ids), need = await picsStillNeeded(key);
+      await dropPics(mine.filter(u => !need.has(u)));
+    }
+    const drop = new Set(chunksOf(col.ids).filter(n => !keep.has(n)).map(n => `/data/c/${String(n).padStart(3, "0")}.gz`));
     const c = await caches.open(DATA_CACHE);
     for (const r of await c.keys()) if (drop.has(new URL(r.url).pathname.replace(/^.*(\/data\/)/, "/data/"))) await c.delete(r);
   }
-  toast(`Removed ${collection(key).label} from this phone`);
+  toast(`Removed ${col.label} from this phone`);
   hydrateOffline();
 }
+// saving a file to the Library also keeps it (and its pictures) for offline reading
+async function keepFileOffline(id){
+  const m = BY.get(id); if (!m || !("caches" in window)) return;
+  try {
+    const have = await cacheKeys(DATA_CACHE);
+    if (!have.has(chunkHref(m.ch))) await getChunk(m.ch);
+    if (m.i) await savePics(await picUrls([id]));
+  } catch {}
+}
+async function releaseFileOffline(id){
+  const m = BY.get(id); if (!m || !m.i || !("caches" in window)) return;
+  try { const mine = await picUrls([id]), need = await picsStillNeeded(); await dropPics(mine.filter(u => !need.has(u))); } catch {}
+}
 async function hydrateOffline(only){
+  const saved = LS.get("offline", {});
   for (const el of document.querySelectorAll(".offl[data-off]")) {
     const key = el.dataset.off; if (only && key !== only) continue;
     const col = collection(key), chs = chunksOf(col.ids);
     if (!chs.length) { el.innerHTML = ""; continue; }
     const job = offJobs.get(key);
     if (job) {
-      el.innerHTML = `<button class="ob" data-offstop="${esc(key)}">${ICON.cloud}<span><b>Downloading ${esc(col.label)}</b><small>${job.done} of ${job.total} parts</small></span><span class="act">Stop</span></button><div class="bar"><i style="width:${(job.done / job.total * 100).toFixed(1)}%"></i></div>`;
+      const p = job.phase === "pics";
+      const done = p ? job.pdone : job.done, total = p ? job.ptotal || 1 : job.total;
+      el.innerHTML = `<button class="ob" data-offstop="${esc(key)}">${ICON.cloud}<span><b>${p ? "Saving pictures" : `Downloading ${esc(col.label)}`}</b><small>${p ? (job.ptotal ? `${fmt(done)} of ${fmt(job.ptotal)} pictures` : "Finding pictures…") : `${done} of ${total} parts${job.pics ? " · pictures next" : ""}`}</small></span><span class="act">Stop</span></button><div class="bar"><i style="width:${(done / total * 100).toFixed(1)}%"></i></div>`;
       continue;
     }
     const have = await cachedCount(chs);
-    const saved = !!LS.get("offline", {})[key];
-    if (have === chs.length && (saved || key !== "all:")) {
-      el.innerHTML = `<button class="ob saved" data-offrm="${esc(key)}">${ICON.check}<span><b>Saved for offline</b><small>${fmt(col.ids.length)} files · about ${estMB(chs)} MB</small></span><span class="act">Remove</span></button>`;
+    const s = saved[key], np = picsOf(col.ids);
+    if (have === chs.length && (s || key !== "all:")) {
+      const withPics = s && s.pics;
+      el.innerHTML = `<div class="ob saved">${ICON.check}<span><b>Saved for offline</b><small>${fmt(col.ids.length)} files${np ? (withPics ? ` · ${fmt(np)} pictures` : " · text only") : ""}</small></span>
+        ${np && !withPics ? `<button class="act" data-offpics="${esc(key)}">Add pictures</button>` : ""}<button class="act" data-offrm="${esc(key)}">Remove</button></div>`;
     } else {
       const left = chs.length - have;
-      el.innerHTML = `<button class="ob" data-offdl="${esc(key)}">${ICON.cloud}<span><b>${key === "all:" ? "Download every file" : `Download ${key.startsWith("canon:") ? "this canon" : esc(col.label)} for offline`}</b><small>${fmt(col.ids.length)} files · about ${estMB(have ? chs.slice(0, left) : chs)} MB${have ? ` left to download` : ""}</small></span><span class="act">Download</span></button>`;
+      el.innerHTML = `<button class="ob" data-offdl="${esc(key)}">${ICON.cloud}<span><b>${key === "all:" ? "Download every file" : `Download ${key.startsWith("canon:") ? "this canon" : esc(col.label)} for offline`}</b><small>${fmt(col.ids.length)} files · about ${mbText(estMB(have ? chs.slice(0, left) : chs))}${have ? " left" : ""}${np ? ` · ${fmt(np)} pictures` : ""}</small></span><span class="act">Download</span></button>`;
     }
   }
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-offdl],[data-offrm],[data-offstop]"); if (!b) return;
+  const b = e.target.closest("[data-offdl],[data-offrm],[data-offstop],[data-offpics]"); if (!b) return;
   e.stopPropagation();
-  if (b.dataset.offdl) downloadOffline(b.dataset.offdl);
+  if (b.dataset.offdl) askDownload(b.dataset.offdl);
+  else if (b.dataset.offpics) { const k = b.dataset.offpics, np = picsOf(collection(k).ids);
+    openSheet(`<h4>Add pictures?</h4><p class="note">Saves ${fmt(np)} pictures, roughly ${mbText(picMB(np))}, so ${esc(collection(k).label)} looks the same offline.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doPics">Add pictures</button></div>`,
+      () => { $("#doPics").onclick = () => { closeSheet(); downloadOffline(k, true); }; }); }
   else if (b.dataset.offstop) { const j = offJobs.get(b.dataset.offstop); if (j) j.stop = true; }
   else if (b.dataset.offrm) {
     const key = b.dataset.offrm, col = collection(key);
-    openSheet(`<h4>Remove ${esc(col.label)}?</h4><p class="note">Its files will need a connection again. Anything in your Library stays as it is.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doRm">Remove</button></div>`,
+    openSheet(`<h4>Remove ${esc(col.label)}?</h4><p class="note">Its files and pictures will need a connection again, except ones you've saved to your Library.</p><div class="confirm"><button class="btn" data-x>Cancel</button><button class="btn pri" id="doRm">Remove</button></div>`,
       () => { $("#doRm").onclick = () => { closeSheet(); removeOffline(key); }; });
   }
 }, true);
 async function openOfflineManager(){
   const saved = LS.get("offline", {});
-  let used = "";
-  try { const est = await navigator.storage.estimate(); used = `The app is using about ${Math.round((est.usage || 0) / 1e6)} MB on this phone.`; } catch {}
   const keys = Object.keys(saved).filter(k => k !== "all:");
+  let npics = 0; try { npics = (await cacheKeys(IMG_CACHE)).size; } catch {}
   openSheet(`<h4>Saved for offline</h4>
     ${keys.length ? `<div class="offlist">${keys.map(k => `<div class="offl" data-off="${esc(k)}"></div>`).join("")}</div>` : `<p class="note">Nothing saved yet. Download a whole series from <b>Archive</b>, or a canon from its page.</p>`}
+    <p class="note" style="margin-top:10px">Files you save to your Library are kept offline too, with their pictures.${npics ? ` ${fmt(npics)} pictures are saved on this phone.` : ""}</p>
     <h4>Everything</h4>
     <p class="note" style="margin-bottom:8px">Every file in the archive, for when you'll be offline for a long time. New files from the weekly update download when you open them.</p>
-    <div class="offl" data-off="all:"></div>
-    ${used ? `<p class="note" style="margin-top:12px">${used}</p>` : ""}`, () => hydrateOffline());
+    <div class="offl" data-off="all:"></div>`, () => hydrateOffline());
 }
-
 /* ---------------- rabbit hole: a random file connected to this one ---------------- */
 let curFwd = [];
 const RABBIT_ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12.5"/><circle cx="16" cy="16" r="8.5"/><circle cx="16" cy="16" r="4.5"/><path d="M16 16l7-9"/></svg>';
@@ -1681,7 +1776,8 @@ function previewLink(id){
       if (bm[id]) delete bm[id]; else bm[id] = today();
       state.lib = {...state.lib, bm}; save("lib");
       $("#pvSave").textContent = bm[id] ? "Saved" : "Save for later";
-      toast(bm[id] ? "Saved to Library" : "Removed from Saved");
+      toast(bm[id] ? "Saved to Library · kept offline" : "Removed from Saved");
+      if (bm[id]) keepFileOffline(id); else releaseFileOffline(id);
     };
   });
   getChunk(m.ch).then(ch => {
@@ -1736,6 +1832,10 @@ async function boot(){
   render(); fitScreen();
   loadCanons();
   loadLinks();
+  if (!LS.get("bmPics", 0) && "caches" in window) setTimeout(async () => {
+    for (const id of Object.keys(state.lib.bm)) await keepFileOffline(id);
+    LS.set("bmPics", 1);
+  }, 8000);
   $("#boot").style.transition = "opacity .3s"; $("#boot").style.opacity = "0"; setTimeout(() => $("#boot").remove(), 320);
   const h = decodeURIComponent((location.hash || "").slice(1)).toLowerCase();
   if (h && BY.has(h)) openArticle(h);

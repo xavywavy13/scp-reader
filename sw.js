@@ -1,14 +1,15 @@
 // SCP Field Reader service worker: app shell offline, article data cached as you read.
-const SHELL = "shell-v14";
+const SHELL = "shell-v15";
 const DATA = "data-v3";      // bump when the article archive is rebuilt
 const FONTS = "fonts-v1";
+const IMG = "img-v1";        // pictures saved for offline reading (filled by the app, not here)
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
-  const keep = [SHELL, DATA, FONTS];
+  const keep = [SHELL, DATA, FONTS, IMG];
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => !keep.includes(k)).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
@@ -59,5 +60,8 @@ self.addEventListener("fetch", e => {
       return hit || net;
     }));
   }
-  // Wiki images go straight to the network.
+  // Wiki pictures: use the saved copy when the app has saved one, otherwise the network.
+  if (req.destination === "image" && url.origin !== location.origin) {
+    e.respondWith(caches.open(IMG).then(async c => (await c.match(req.url)) || fetch(req)));
+  }
 });

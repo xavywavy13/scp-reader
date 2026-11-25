@@ -168,6 +168,8 @@ def main():
             "s": SERIES, "c": next((c for c in CLASS_TAGS if c in tg), "thaumiel"),
             "ch": CHUNK_NO,
         })
+        if body.count('class="img"'):
+            entries[-1]["i"] = body.count('class="img"')
         chunk[slug] = body
         print(f"[{n}/{len(slugs)}] {slug}: {title}")
 
