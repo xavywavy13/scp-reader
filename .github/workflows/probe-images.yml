@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for u in https://scp-wiki.wdfiles.com/local--files/scp-173/SCP-173.jpg https://scp-wiki.wdfiles.com/local--files/scp-002/800px-SCP002.jpg; do
+          for u in https://scp-wiki.wdfiles.com/local--files/scp-002/800px-SCP002-new.jpg; do
             echo "== $u"
             curl -sS -o /dev/null -D - -H "Origin: https://xavywavy13.github.io" "$u" | grep -iE "^HTTP|access-control|content-type|content-length|location|cache-control"
           done
