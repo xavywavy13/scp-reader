@@ -258,6 +258,32 @@ label.btn{cursor:pointer}
 
 /* ---------- reader ---------- */
 .reader{background:var(--r-bg);color:var(--r-ink);z-index:50}
+.rempty{display:none}
+
+/* iPad and landscape: the list on the left, the reader beside it */
+html.wide{--lw:clamp(320px,36vw,420px)}
+html.wide body{background:var(--bg)}
+html.wide .app{width:var(--lw);border-right:1px solid var(--line);background:var(--bg)}
+html.wide .tabs{padding-right:8px}
+html.wide main{padding-right:16px}
+html.wide #listO,html.wide #canonO{right:auto;width:var(--lw);border-right:1px solid var(--line)}
+html.wide #listO:not(.open),html.wide #canonO:not(.open){transform:translateX(-101%)}
+html.wide #listO .ohead,html.wide #canonO .ohead{padding-right:8px}
+html.wide #listO .obody,html.wide #canonO .obody{padding-right:16px}
+html.wide .reader{left:var(--lw);right:0;width:auto;transform:none;transition:none;z-index:30}
+html.wide .reader .rbar{padding-left:6px}
+html.wide .reader .rscroll{padding-left:var(--r-gutter,20px)}
+html.wide .reader .findbar{padding-left:8px}
+html.wide .reader:not(.open) > :not(.rempty){visibility:hidden}
+html.wide .reader:not(.open) .rempty{display:grid;place-items:center;position:absolute;inset:0;text-align:center;padding:24px;background:var(--bg);color:var(--muted)}
+html.wide .rempty .w{font:700 40px/1 var(--f-display);text-transform:uppercase;color:var(--ink)}
+html.wide .rempty p{margin:10px auto 0;max-width:24em;font-size:15px;line-height:1.5}
+html.wide .rempty svg{width:46px;height:46px;color:var(--faint);margin-bottom:14px}
+html.wide .row.cur{background:var(--accent-soft);border-radius:10px;padding-left:10px;padding-right:10px}
+html.wide .row.cur .id{color:var(--accent)}
+html.wide .clist{grid-template-columns:1fr}
+html.wide .toast{left:calc(var(--lw) / 2)}
+html.wide .sheet{max-width:560px}
 .reader[data-rt="paper"]{--r-bg:#fbfbf9;--r-ink:#1b1d20;--r-muted:#5f666f;--r-line:#dfe2e6;--r-accent:#9b1c2e;--r-soft:#f1f2f4;color-scheme:light}
 .reader[data-rt="sepia"]{--r-bg:#f2e8d5;--r-ink:#3a2e20;--r-muted:#76664f;--r-line:#dccfb5;--r-accent:#8c3b1e;--r-soft:#e9dcc3;color-scheme:light}
 .reader[data-rt="night"]{--r-bg:#121518;--r-ink:#d8dce0;--r-muted:#8f98a2;--r-line:#2a3037;--r-accent:#ea7080;--r-soft:#1b1f24;color-scheme:dark}
@@ -458,6 +484,7 @@ label.btn{cursor:pointer}
     <button class="done" id="fdone">Done</button>
   </div>
   <div class="swipe-hint l" id="swL"></div><div class="swipe-hint r" id="swR"></div>
+  <div class="rempty"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><div class="w">No file open</div><p>Pick a file from the list and it opens here.</p></div></div>
   <div class="rscroll" id="rScroll"><div class="rwrap" id="rWrap"></div></div>
 </section>
 
@@ -630,7 +657,7 @@ function rowHTML(m){
   const st = (isBm(m.id) ? `<span class="bmk">${ICON.bm}</span>` : "") + (r ? `<span class="done" aria-label="Read">${ICON.check}</span>` : p > 0.02 ? ring(p) : "");
   const cls = m.c ? `<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>` : "";
   const subt = m.k === "scp" ? (m.n || "—") : (m.a ? "by " + m.a : "");
-  return `<button class="row${r?" read":""}" data-id="${esc(m.id)}"><div class="l"><div class="id">${esc(label(m))}</div><div class="n">${esc(subt)}</div><div class="m">${cls}<span>${m.r>=0?"+":""}${fmt(m.r)}</span><span>${mins(m)} min</span>${m.k!=="scp"&&m.d?`<span>${m.d.slice(0,4)}</span>`:""}</div></div><div class="st">${st}</div></button>`;
+  return `<button class="row${r?" read":""}${cur && cur.id === m.id ? " cur" : ""}" data-id="${esc(m.id)}"><div class="l"><div class="id">${esc(label(m))}</div><div class="n">${esc(subt)}</div><div class="m">${cls}<span>${m.r>=0?"+":""}${fmt(m.r)}</span><span>${mins(m)} min</span>${m.k!=="scp"&&m.d?`<span>${m.d.slice(0,4)}</span>`:""}</div></div><div class="st">${st}</div></button>`;
 }
 function lazyList(container, items, emptyHTML){
   container.innerHTML = "";
@@ -699,7 +726,7 @@ function renderHome(){
     <div class="hscroll">${topUnread.map(m => `<button class="card" data-id="${esc(m.id)}"><span class="id">${esc(m.t)}</span><span class="n">${esc(m.n||"")}</span><span class="m">${m.c?`<span class="cls" data-c="${esc(m.c)}">${esc(CLASS_LABEL(m.c))}</span>`:""}<span>+${fmt(m.r)}</span></span></button>`).join("")}</div>
     <h2 class="sec">Collections<button data-goto="hubs">All ${fmt(IDX.hubs.length)}</button></h2>
     <div class="chipline">${hubs.map(h => `<button class="hub" data-hub="${esc(h.id)}">${esc(h.t)}<span>${h.m.length}</span></button>`).join("")}</div>
-    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 16</p>`;
+    <p class="stat">${fmt(readScp)} of ${fmt(scps.length)} SCPs read · ${fmt(readCount)} files total<br>Archive ${IDX.updated ? "updated" : "snapshot"} ${esc(IDX.updated || IDX.built)} · App version 17</p>`;
 }
 function randomFrom(kind){
   let pool;
@@ -785,7 +812,7 @@ function renderCanonBrowse(soft, keepTop){
     <div class="seg" role="group" aria-label="Type">${KINDS.map(([k,l]) => `<button data-k="${k}" aria-pressed="${B.kind===k}">${l}</button>`).join("")}</div>
     <div class="ctl">
       <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="cq" type="search" placeholder="Find a canon" autocomplete="off" spellcheck="false"></div>
-      <select id="csort" aria-label="Sort">${[["yours","Yours first"],["az","A–Z"],["size","Most files"]].map(([v,l]) => `<option value="${v}"${(B.csort||"yours")===v?" selected":""}>${l}</option>`).join("")}</select>
+      <select id="csort" aria-label="Sort">${[["yours","Yours first"],["rating","Top rated"],["az","A–Z"],["size","Most files"]].map(([v,l]) => `<option value="${v}"${(B.csort||"yours")===v?" selected":""}>${l}</option>`).join("")}</select>
     </div>
     <div class="count" id="ccount">${CANONS.length ? `${fmt(list.length)} canons` : ""}</div>
     ${CANONS.length ? `<div class="clist" id="clist">${list.map(c => canonCardHTML(c, true)).join("")}</div>`
@@ -1008,14 +1035,14 @@ async function loadCanons(){
   refresh();
 }
 function canonStats(c){
-  let read = 0, words = 0, last = 0, inprog = null, inprogTs = 0;
+  let read = 0, words = 0, last = 0, inprog = null, inprogTs = 0, rating = 0;
   for (const id of c.all) {
-    const m = BY.get(id); words += m.w;
+    const m = BY.get(id); words += m.w; rating += m.r;
     if (isRead(id)) { read++; last = Math.max(last, state.lib.read[id] || 0); continue; }
     const p = state.prog[id];
     if (p && p[0] > 0.02) { last = Math.max(last, p[1]); if (p[1] > inprogTs) { inprogTs = p[1]; inprog = id; } }
   }
-  return {read, n: c.all.length, hours: words / 230 / 60, last, inprog, next: inprog || c.all.find(id => !isRead(id)) || null};
+  return {read, n: c.all.length, hours: words / 230 / 60, last, inprog, avg: Math.round(rating / c.all.length), next: inprog || c.all.find(id => !isRead(id)) || null};
 }
 const hrs = h => h < 1 ? Math.max(5, Math.round(h * 12) * 5) + " min" : (h < 10 ? h.toFixed(1).replace(/\.0$/, "") : Math.round(h)) + " h";
 const sortName = t => t.replace(/^the\s+/i, "").toLowerCase();
@@ -1023,12 +1050,13 @@ function canonsSorted(mode){
   const list = CANONS.map(c => [c, canonStats(c)]);
   if (mode === "az") list.sort((a, b) => sortName(a[0].t).localeCompare(sortName(b[0].t)));
   else if (mode === "size") list.sort((a, b) => b[1].n - a[1].n);
+  else if (mode === "rating") list.sort((a, b) => b[1].avg - a[1].avg);
   else list.sort((a, b) => (b[1].last - a[1].last) || (a[0].un - b[0].un) || (b[1].n - a[1].n));
   return list.map(x => x[0]);
 }
 function canonCardHTML(c, wide){
   const s = canonStats(c);
-  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">Canon · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
+  return `<button class="ccard${wide ? " wide" : ""}" data-canon="${esc(c.id)}"><span class="k">Canon · ${fmt(s.n)} files${c.un ? " · unmaintained" : ""}</span><span class="t">${esc(c.t)}</span><span class="d">${esc(c.d || "")}</span><span class="m">${s.read ? `${fmt(s.read)} of ${fmt(s.n)} read` : `About ${hrs(s.hours)} of reading`} · avg ${s.avg >= 0 ? "+" : ""}${fmt(s.avg)}</span><div class="bar"><i style="width:${(s.read / s.n * 100).toFixed(1)}%"></i></div></button>`;
 }
 function canonRow(m, n){
   const h = rowHTML(m);
@@ -1126,7 +1154,7 @@ function effectiveRT(){
 }
 function paintBehindReader(){
   // keep the page behind the reader the same colour as the paper, so no band shows at the screen edges
-  if (!R.classList.contains("open")) return;
+  if (!R.classList.contains("open") || document.documentElement.classList.contains("wide")) { document.documentElement.style.background = document.body.style.background = ""; return; }
   const bg = getComputedStyle(R).backgroundColor;
   document.documentElement.style.background = document.body.style.background = bg;
 }
@@ -1181,6 +1209,8 @@ async function openArticle(id, opts = {}){
   cur = m; openedAt = Date.now();
   curCanon = opts.canon || null;
   curFwd = []; closeFind(true);
+  document.querySelectorAll(".row.cur").forEach(r => r.classList.remove("cur"));
+  document.querySelectorAll(`.row[data-id="${CSS.escape(id)}"]`).forEach(r => r.classList.add("cur"));
   curSurprise = !!opts.surprise;
   applyReaderSettings();
   R.classList.add("open"); R.classList.remove("hidebar", "scrolled");
@@ -1907,6 +1937,15 @@ function fitScreen(){
   rs.setProperty("--full", (innerHeight + vgap) + "px");
 }
 addEventListener("resize", fitScreen);
+// two columns on an iPad, or a phone on its side
+function fitLayout(){
+  const wide = innerWidth >= 768 || (innerWidth >= 740 && innerWidth > innerHeight * 1.2);
+  if (document.documentElement.classList.contains("wide") === wide) return;
+  document.documentElement.classList.toggle("wide", wide);
+  paintBehindReader();
+}
+addEventListener("resize", fitLayout);
+fitLayout();
 // Android: the page itself never scrolls; only the panels inside it do
 if (!IS_IOS) addEventListener("scroll", () => { if (scrollY || scrollX) scrollTo(0, 0); }, {passive:true}); addEventListener("orientationchange", () => setTimeout(fitScreen, 300));
 fitScreen();
