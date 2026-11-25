@@ -1,0 +1,14 @@
+name: Probe wiki (temporary)
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "== comments/show"
+          curl -sS -o /tmp/cs.html -D - "https://scp-wiki.wikidot.com/scp-173/comments/show" | grep -iE "^HTTP|^location"
+          grep -o 'forum/t-[0-9]*[^"]*' /tmp/cs.html | head -3
+          grep -o 'id="thread-container[^>]*>' /tmp/cs.html | head -2
+          grep -c 'class="post"' /tmp/cs.html || true
+          echo "== page discuss link"
+          curl -sS "https://scp-wiki.wikidot.com/scp-173" | grep -o 'href="/forum/t-[0-9]*[^"]*"' | head -3
